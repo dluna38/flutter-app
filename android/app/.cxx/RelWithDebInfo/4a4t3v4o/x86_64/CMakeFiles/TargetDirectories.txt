@@ -1,0 +1,2 @@
+C:/extra_projects/plantapp/android/app/.cxx/RelWithDebInfo/4a4t3v4o/x86_64/CMakeFiles/edit_cache.dir
+C:/extra_projects/plantapp/android/app/.cxx/RelWithDebInfo/4a4t3v4o/x86_64/CMakeFiles/rebuild_cache.dir
