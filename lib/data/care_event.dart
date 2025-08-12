@@ -1,4 +1,3 @@
-
 import 'package:myapp/data/plant.dart';
 
 class CareEvent {
@@ -6,10 +5,9 @@ class CareEvent {
   Plant? plant;
   DateTime date;
   String type;
-  String notes;
+  String? notes;
 
-  CareEvent({required this.date, required this.type, required this.notes,this.plant});
-
+  CareEvent({required this.date, required this.type, this.notes, this.plant});
 
   Map<String, Object?> toMap() {
     return {
@@ -31,4 +29,11 @@ class CareEvent {
     careEvent.id = map['id'] as int?;
     return careEvent;
   }
+
+  @override
+  String toString() {
+    return 'CareEvent{plant: $plant, date: $date, type: $type, notes: $notes}';
+  }
 }
+
+enum TypeCareEvent { riego, fertilizante, poda, cambioAbono }
