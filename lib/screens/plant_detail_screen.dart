@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:intl/intl.dart';
 import 'package:myapp/data/database_helper.dart';
 import 'package:myapp/data/care_event.dart';
 import 'package:myapp/data/plant.dart';
@@ -9,6 +10,8 @@ import 'package:myapp/data/reminder.dart';
 import 'package:myapp/screens/add_care_event_screen.dart';
 import 'package:myapp/screens/add_reminder_screen.dart';
 import 'package:myapp/screens/plant_list_screen.dart';
+
+import '../main.dart';
 
 class PlantDetailScreen extends StatelessWidget {
   final Plant plant;
@@ -89,7 +92,7 @@ void _showDeleteReminderConfirmationDialog(BuildContext context, Reminder remind
             TextButton(
               onPressed: () {
                 DatabaseHelper().deletePlant(plant.id!);
-                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const PlantListScreen()), (route) => false);
+                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomeScreen()), (route) => false);
               },
               child: const Text("Delete"),
             ),
@@ -102,10 +105,9 @@ void _showDeleteReminderConfirmationDialog(BuildContext context, Reminder remind
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(
-            CupertinoIcons.leaf_arrow_circlepath,
-          ),
-        title: Text(plant.name),
+        backgroundColor: Colors.green[300],
+        title: Text(toBeginningOfSentenceCase(plant.name)),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

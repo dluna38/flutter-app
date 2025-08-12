@@ -1,8 +1,8 @@
 import 'dart:ffi';
 
 class Reminder {
-  Long? id;
-  final Long plantId;
+  int? id;
+  final int plantId;
   final String task;
   final String frequency;
   final DateTime nextDue;

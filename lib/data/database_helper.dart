@@ -82,6 +82,7 @@ class DatabaseHelper {
 
   Future<int> insertPlant(Plant plant) async {
     try {
+
       Database db = await database;
       int plantId = await db.insert(_PLANT_TABLE, plant.toMap());
       //TODO check reminders
@@ -101,7 +102,7 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> insertCareEvent(CareEvent careEvent, Long plantId) async {
+  Future<int> insertCareEvent(CareEvent careEvent, int plantId) async {
     try {
       Database db = await database;
       return await db.insert('care_events', {
@@ -218,9 +219,13 @@ class DatabaseHelper {
     }
   }
 
-  deleteCareEvent(int i) {}
+  deleteCareEvent(int id) {}
 
-  deleteReminder(Long long) {}
+  deleteReminder(int id) {}
 
-  void deletePlant(Long long) {}
+  void deletePlant(int id) async{
+    Database db = await database;
+    int result =  await db.delete(_PLANT_TABLE,where: 'id=?',whereArgs: [id]);
+    //return result
+  }
 }

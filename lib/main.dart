@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/data/plant.dart';
+import 'package:myapp/helpers/io_helpers.dart';
+import 'package:myapp/screens/plant_detail_screen.dart';
 
 import 'screens/add_plant_screen.dart';
 import 'screens/plant_list_screen.dart';
@@ -16,26 +19,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'PlantApp',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightGreen),
         useMaterial3: true,
       ),
       routes: {
-        '/': (context) => const HomeScreen(),
+        '/': (context) => const NavBarMain(),
         '/add_plant': (context) => const AddPlantScreen(),
         '/plant_list': (context) => const PlantListScreen(),
       },
@@ -48,43 +36,131 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-     // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        leading: const Icon(
-          Icons.eco,
-        ),
-        title: const Text("My Plants"),
+        leading: const Icon(Icons.eco),
+        title: const Text("Mis Plantas"),
       ),
-      floatingActionButton: ElevatedButton(onPressed: (){}, child: Text('+'),),
+      floatingActionButton: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddPlantScreen()),
+          );
+        },
+        child: Text('+'),
+      ),
+      body: PlantListScreen(),
+    );
+  }
+}
+
+class NavBarMain extends StatefulWidget {
+  const NavBarMain({super.key});
+
+  @override
+  State<NavBarMain> createState() => _NavBarMainState();
+}
+
+class _NavBarMainState extends State<NavBarMain> {
+  int currentPageIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Scaffold(
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (int index) {
+          setState(() {
+            currentPageIndex = index;
+          });
+        },
+        indicatorColor: Colors.green,
+        selectedIndex: currentPageIndex,
+        destinations: const <Widget>[
+          NavigationDestination(
+            selectedIcon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            label: 'Plantas',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.notifications_sharp),
+            label: 'Notificaciones',
+          ),
+          NavigationDestination(icon: Icon(Icons.menu_book), label: 'Guias'),
+        ],
+      ),
+      body:
+          <Widget>[
+            HomeScreen(),
+            DummyGridScreen(),
+            GridView.count(
+              // Create a grid with 2 columns.
+              // If you change the scrollDirection to horizontal,
+              // this produces 2 rows.
+              childAspectRatio: 2.0,
+              crossAxisCount: 2,
+              // Generate 100 widgets that display their index in the list.
+              children: List.generate(7, (index) {
+                return CardPlant1(index: index);
+              }),
+            ),
+          ][currentPageIndex],
+    );
+  }
+}
+
+class CardPlant1 extends StatelessWidget {
+  final int index;
+  const CardPlant1({super.key, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        onTap: () {
+          debugPrint('Card tapped.');
+        },
+        leading: CircleAvatar(child: Icon(Icons.eco_rounded)),
+        title: Text('Item $index', style: TextTheme.of(context).headlineSmall),
+      ),
+    );
+  }
+}
+
+class DummyGridScreen extends StatelessWidget {
+  const DummyGridScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Dummy Grid Screen')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/add_plant');
-              },
-              child: const Text('Add Plant'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/plant_list');
-              },
-              child: const Text('Plant List'),
-            ),
-          ],
+        padding: const EdgeInsets.all(8.0),
+        child: GridView.builder(
+          itemCount: 20, // Número de tarjetas
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2, // 2 columnas
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 2.0, // Relación ancho/alto de cada tarjeta
+          ),
+          itemBuilder: (context, index) {
+            return Card(
+              elevation: 4,
+              color: Colors.blueGrey[100],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  'Item ${index + 1}',
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
