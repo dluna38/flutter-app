@@ -5,6 +5,8 @@ import 'package:myapp/data/plant.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:myapp/helpers/string_helpers.dart';
 
+import '../main.dart';
+
 class AddPlantScreen extends StatelessWidget {
   const AddPlantScreen({super.key});
 
@@ -139,7 +141,7 @@ class _FormPlantState extends State<FormPlant> {
   final _speciesController = TextEditingController();
   final _locationController = TextEditingController();
   final _notesController = TextEditingController();
-  final hintStyle =TextStyle(color: Colors.grey[400]);
+  final hintStyle = TextStyle(color: Colors.grey[400]);
 
   String? _imagePath;
 
@@ -262,7 +264,11 @@ class _FormPlantState extends State<FormPlant> {
           SizedBox(height: 25),
           TextFormField(
             controller: _nameController,
-            decoration: InputDecoration(labelText: 'Nombre de la planta',hintText: 'Carnivorita...', hintStyle: hintStyle),
+            decoration: InputDecoration(
+              labelText: 'Nombre de la planta',
+              hintText: 'Carnivorita...',
+              hintStyle: hintStyle,
+            ),
             validator: (String? value) {
               if (value == null || value.isEmpty) {
                 return 'No puedes dejarlo vacio';
@@ -272,7 +278,11 @@ class _FormPlantState extends State<FormPlant> {
           ),
           TextFormField(
             controller: _speciesController,
-            decoration: InputDecoration(labelText: 'Especie de la planta',hintText: 'Dionea muscipula', hintStyle: hintStyle),
+            decoration: InputDecoration(
+              labelText: 'Especie de la planta',
+              hintText: 'Dionea muscipula',
+              hintStyle: hintStyle,
+            ),
             validator: (String? value) {
               if (value == null || value.isEmpty) {
                 return 'No puedes dejarlo vacio';
@@ -283,24 +293,25 @@ class _FormPlantState extends State<FormPlant> {
           TextFormField(
             controller: _locationController,
             decoration: InputDecoration(
-              labelText: 'Ubicación de la planta'
-                ,hintText: 'Terraza, esquina, p2...'
-                , hintStyle: hintStyle
+              labelText: 'Ubicación de la planta',
+              hintText: 'Terraza, esquina, p2...',
+              hintStyle: hintStyle,
             ),
           ),
           TextFormField(
             controller: _notesController,
             maxLines: 4,
-            decoration: InputDecoration(labelText: 'Notas adicionales',
-                hintText: 'Regar solo con agua de lluvia'
-                , hintStyle: hintStyle
-               ),
+            decoration: InputDecoration(
+              labelText: 'Notas adicionales',
+              hintText: 'Regar solo con agua de lluvia',
+              hintStyle: hintStyle,
+            ),
           ),
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   // Validate returns true if the form is valid, or false otherwise.
                   if (_formKey.currentState!.validate()) {
                     final plant = Plant(
@@ -317,6 +328,16 @@ class _FormPlantState extends State<FormPlant> {
                       imagePath: _imagePath,
                     );
                     debugPrint('Guardar: $plant');
+                    await DatabaseHelper().insertPlant(plant);
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HomeScreen(),
+                        ),
+                        (route) => false,
+                      );
+                    }
                   }
                 },
                 child: const Text('Guardar'),
