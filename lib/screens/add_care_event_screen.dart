@@ -14,9 +14,19 @@ class AddCareEventScreen extends StatefulWidget {
 }
 
 class _AddCareEventScreenState extends State<AddCareEventScreen> {
+  late Plant plant;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    plant = widget.plant;
+  }
+
   DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay(hour: DateTime.now().hour, minute: DateTime.now().minute);
-  final TextEditingController _typeController = TextEditingController();
+  TimeOfDay _selectedTime = TimeOfDay(
+    hour: DateTime.now().hour,
+    minute: DateTime.now().minute,
+  );
   final TextEditingController _notesController = TextEditingController();
   TypeCareEvent selectedTypeEvent = TypeCareEvent.riego;
   Future<void> _selectDate(BuildContext context) async {
@@ -47,14 +57,14 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-         leading: Icon(
-          Icons.emoji_nature,
-        ),
-        title: const Text('Add Care Event'),
+        backgroundColor: Colors.green[300],
+        title: const Text('Agregar evento'),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -85,26 +95,29 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
                 ),
               ],
             ),
-            Text('Tipo'
-            ),
+            Text('Tipo'),
             SegmentedButton<TypeCareEvent>(
               segments: const <ButtonSegment<TypeCareEvent>>[
                 ButtonSegment<TypeCareEvent>(
-                    value: TypeCareEvent.riego,
-                    label: Text('Riego'),
-                    icon: Icon(Icons.water_drop)),
+                  value: TypeCareEvent.riego,
+                  label: Text('Riego'),
+                  icon: Icon(Icons.water_drop),
+                ),
                 ButtonSegment<TypeCareEvent>(
-                    value: TypeCareEvent.fertilizante,
-                    label: Text('Fertilizante'),
-                    icon: Icon(Icons.grain)),
+                  value: TypeCareEvent.fertilizante,
+                  label: Text('Fertilizante'),
+                  icon: Icon(Icons.grain),
+                ),
                 ButtonSegment<TypeCareEvent>(
-                    value: TypeCareEvent.poda,
-                    label: Text('Poda'),
-                    icon: Icon(Icons.cut)),
+                  value: TypeCareEvent.poda,
+                  label: Text('Poda'),
+                  icon: Icon(Icons.cut),
+                ),
                 ButtonSegment<TypeCareEvent>(
-                    value: TypeCareEvent.cambioAbono,
-                    label: Text('C. tierra'),
-                    icon: Icon(Icons.energy_savings_leaf)),
+                  value: TypeCareEvent.cambioAbono,
+                  label: Text('C. tierra'),
+                  icon: Icon(Icons.energy_savings_leaf),
+                ),
               ],
               selected: <TypeCareEvent>{selectedTypeEvent},
               onSelectionChanged: (Set<TypeCareEvent> newSelection) {
@@ -128,12 +141,19 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
                     _selectedTime.hour,
                     _selectedTime.minute,
                   ),
-                  type: selectedTypeEvent.name,
-                  notes: _notesController.text.isEmpty ? null : _notesController.text,
+                  type: selectedTypeEvent,
+                  notes:
+                      _notesController.text.isEmpty
+                          ? null
+                          : _notesController.text,
+                  plant: plant
                 );
                 debugPrint('new event $newCareEvent');
                 return;
-                await DatabaseHelper().insertCareEvent(newCareEvent,widget.plant.id!);
+                await DatabaseHelper().insertCareEvent(
+                  newCareEvent,
+                  widget.plant.id!,
+                );
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
@@ -147,17 +167,16 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
   }
 }
 
-class SegmentedButtonTypeEvent extends StatefulWidget{
+class SegmentedButtonTypeEvent extends StatefulWidget {
   final TypeCareEvent chooseType;
 
   const SegmentedButtonTypeEvent({super.key, required this.chooseType});
 
   @override
   State<StatefulWidget> createState() => _SegmentedButtonTypeEventState();
-
 }
 
-class _SegmentedButtonTypeEventState extends State<SegmentedButtonTypeEvent>{
+class _SegmentedButtonTypeEventState extends State<SegmentedButtonTypeEvent> {
   late TypeCareEvent _selectedType = widget.chooseType;
 
   @override
@@ -172,21 +191,25 @@ class _SegmentedButtonTypeEventState extends State<SegmentedButtonTypeEvent>{
     return SegmentedButton<TypeCareEvent>(
       segments: const <ButtonSegment<TypeCareEvent>>[
         ButtonSegment<TypeCareEvent>(
-            value: TypeCareEvent.riego,
-            label: Text('Riego'),
-            icon: Icon(Icons.water_drop)),
+          value: TypeCareEvent.riego,
+          label: Text('Riego'),
+          icon: Icon(Icons.water_drop),
+        ),
         ButtonSegment<TypeCareEvent>(
-            value: TypeCareEvent.fertilizante,
-            label: Text('Fertilizante'),
-            icon: Icon(Icons.grain)),
+          value: TypeCareEvent.fertilizante,
+          label: Text('Fertilizante'),
+          icon: Icon(Icons.grain),
+        ),
         ButtonSegment<TypeCareEvent>(
-            value: TypeCareEvent.poda,
-            label: Text('Poda'),
-            icon: Icon(Icons.cut)),
+          value: TypeCareEvent.poda,
+          label: Text('Poda'),
+          icon: Icon(Icons.cut),
+        ),
         ButtonSegment<TypeCareEvent>(
-            value: TypeCareEvent.cambioAbono,
-            label: Text('C. tierra'),
-            icon: Icon(Icons.energy_savings_leaf)),
+          value: TypeCareEvent.cambioAbono,
+          label: Text('C. tierra'),
+          icon: Icon(Icons.energy_savings_leaf),
+        ),
       ],
       selected: <TypeCareEvent>{_selectedType},
       onSelectionChanged: (Set<TypeCareEvent> newSelection) {

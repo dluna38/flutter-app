@@ -4,7 +4,7 @@ class CareEvent {
   int? id;
   Plant? plant;
   DateTime date;
-  String type;
+  TypeCareEvent type;
   String? notes;
 
   CareEvent({required this.date, required this.type, this.notes, this.plant});
@@ -22,7 +22,7 @@ class CareEvent {
   static CareEvent fromMap(Map<String, dynamic> map) {
     CareEvent careEvent = CareEvent(
       date: DateTime.parse(map['date'] as String),
-      type: map['type'] as String,
+      type: map['type'] as TypeCareEvent,
       notes: map['notes'] as String,
       plant: map['plant'] as Plant?,
     );
@@ -32,8 +32,16 @@ class CareEvent {
 
   @override
   String toString() {
-    return 'CareEvent{plant: $plant, date: $date, type: $type, notes: $notes}';
+    return 'CareEvent{plant: ${plant?.id}, date: $date, type: $type, notes: $notes}';
   }
 }
 
-enum TypeCareEvent { riego, fertilizante, poda, cambioAbono }
+enum TypeCareEvent {
+  riego(normalName: 'Riego'),
+  fertilizante(normalName: 'Fertilizante'),
+  poda(normalName: 'Poda'),
+  cambioAbono(normalName: 'Cambio abono');
+
+  final String normalName;
+  const TypeCareEvent({required this.normalName});
+}
