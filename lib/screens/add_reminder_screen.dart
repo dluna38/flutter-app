@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
+import 'package:myapp/helpers/notification_helper.dart';
 import '../data/plant.dart';
 import '../data/database_helper.dart';
 import '../data/reminder.dart';
+import '../helpers/notification_helper.dart';
 
 class AddReminderScreen extends StatefulWidget {
   final Plant plant;
@@ -14,43 +17,55 @@ class AddReminderScreen extends StatefulWidget {
 }
 
 class _AddReminderScreenState extends State<AddReminderScreen> {
-  final TextEditingController _taskController = TextEditingController();
-  String _selectedFrequency = 'daily';
-  DateTime _selectedDate = DateTime.now();
+  late Plant plant;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    plant = widget.plant;
+  }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  final TextEditingController _taskController = TextEditingController();
+  final TextEditingController _daysController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay(hour: 9, minute: 0);
+
+  Future<void> _selectTime(BuildContext context) async {
+    TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2101),
+      initialEntryMode: TimePickerEntryMode.dial,
+      initialTime: TimeOfDay.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (pickedTime != null && pickedTime != _selectedTime) {
+      debugPrint('Guardar: $pickedTime');
       setState(() {
-        _selectedDate = picked;
+        _selectedTime = pickedTime;
       });
     }
   }
 
   void _saveReminder() async {
-    DateTime nextDue = _selectedDate;
-    if (_selectedFrequency == 'daily') {
-      nextDue = _selectedDate.add(const Duration(days: 1));
-    } else if (_selectedFrequency == 'weekly') {
-      nextDue = _selectedDate.add(const Duration(days: 7));
-    } else if (_selectedFrequency == 'monthly') {
-      nextDue = DateTime(_selectedDate.year, _selectedDate.month + 1, _selectedDate.day);
+    int? days = int.tryParse(_daysController.text);
+    if (days == null || days < 1) {
+      return;
     }
+    DateTime now = DateTime.now();
+    DateTime nextDue = DateTime(now.year,now.month,now.day,_selectedTime.hour,_selectedTime.minute).add(Duration(days: days));
 
-    final dbHelper = DatabaseHelper();
+
     Reminder reminder = Reminder(
       plantId: widget.plant.id!,
-      task: _taskController.text,
-      frequency: _selectedFrequency,
+      task: 'Tu planta ${plant.name}: ${_taskController.text}',
+      frequencyDays: days,
       nextDue: nextDue,
+      active: true
     );
-    await dbHelper.insertReminder(reminder);
-    if(context.mounted) {
+
+    debugPrint('remider $reminder');
+    int idReminder = await DatabaseHelper().insertReminder(reminder);
+    reminder.id = idReminder;
+    Reminder.scheduleNotification(reminder);
+    if (context.mounted) {
       Navigator.pop(context);
     }
   }
@@ -58,10 +73,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Reminder'),
-        leading: const Icon(Icons.local_florist),
-      ),
+      appBar: AppBar(title: const Text('Add Reminder'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -69,38 +81,30 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
           children: [
             TextField(
               controller: _taskController,
-              decoration: const InputDecoration(labelText: 'Task'),
+              decoration: const InputDecoration(labelText: 'Que recordar?'),
             ),
             const SizedBox(height: 20),
-            DropdownButtonFormField<String>(
-              value: _selectedFrequency,
-              items: ['daily', 'weekly', 'monthly']
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedFrequency = newValue!;
-                });
-              },
-              decoration: const InputDecoration(labelText: 'Frequency'),
+            TextField(
+              keyboardType: TextInputType.number,
+              controller: _daysController,
+              decoration: const InputDecoration(
+                labelText: 'A partir de hoy, cada tantos dias',
+              ),
             ),
             const SizedBox(height: 20),
             Row(
               children: [
                 Text(
-                  'Start Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}',
+                  'A las: ${_selectedTime.format(context)}',
+                  style: const TextStyle(fontSize: 16),
                 ),
-                const SizedBox(width: 20),
-                ElevatedButton(
-                  onPressed: () => _selectDate(context),
-                  child: const Text('Select Date'),
+                IconButton(
+                  icon: const Icon(Icons.timer_sharp),
+                  onPressed: () => _selectTime(context),
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveReminder,

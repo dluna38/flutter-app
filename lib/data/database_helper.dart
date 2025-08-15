@@ -18,24 +18,6 @@ class DatabaseHelper {
 
   static Database? _database;
 
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
-  Future<void> initNotifications() async {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
-    await _flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
-    );
-  }
-
-  void onDidReceiveNotificationResponse(
-    NotificationResponse notificationResponse,
-  ) {}
-
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
@@ -73,16 +55,16 @@ class DatabaseHelper {
           plantId INTEGER,
           task TEXT,
           frequency TEXT,
-          nextDue TEXT
+          nextDue TEXT,
+          active INTEGER
       )
     ''');
   }
 
   final String _PLANT_TABLE = "plants";
-
+  final String _REMINDERS_TABLE = 'reminders';
   Future<int> insertPlant(Plant plant) async {
     try {
-
       Database db = await database;
       int plantId = await db.insert(_PLANT_TABLE, plant.toMap());
       //TODO check reminders
@@ -113,29 +95,6 @@ class DatabaseHelper {
       });
     } catch (e) {
       log.severe("Error inserting care event: $e");
-      return -1;
-    }
-  }
-
-  Future<int> insertReminder(Reminder reminder) async {
-    try {
-      Database db = await database;
-      int id = await db.insert('reminders', {
-        'plantId': reminder.plantId,
-        'task': reminder.task,
-        'frequency': reminder.frequency,
-        'nextDue': reminder.nextDue.toIso8601String(),
-      });
-      await db.update(
-        'plants',
-        {},
-        where: 'id = ?',
-        whereArgs: [reminder.plantId],
-      );
-      checkReminders();
-      return id;
-    } catch (e) {
-      log.info("Error inserting reminder: $e");
       return -1;
     }
   }
@@ -193,8 +152,9 @@ class DatabaseHelper {
         id: remindersMap[i]['id'],
         plantId: remindersMap[i]['plantId'],
         task: remindersMap[i]['task'],
-        frequency: remindersMap[i]['frequency'],
+        frequencyDays: remindersMap[i]['frequency'],
         nextDue: DateTime.parse(remindersMap[i]['nextDue']),
+        active: remindersMap[i]['active'],
       );
     });
     List<Plant> allPlants = plants ?? await getPlants();
@@ -203,7 +163,7 @@ class DatabaseHelper {
         Plant plant = allPlants.firstWhere(
           (element) => element.id == reminder.plantId,
         );
-        await _flutterLocalNotificationsPlugin.show(
+        /*await _flutterLocalNotificationsPlugin.show(
           reminder.id! as int,
           'Reminder Due',
           '${reminder.task} - ${plant.name}',
@@ -214,18 +174,61 @@ class DatabaseHelper {
               importance: Importance.high,
             ),
           ),
-        );
+        );*/
       }
     }
   }
 
   deleteCareEvent(int id) {}
 
+  Future<int> insertReminder(Reminder reminder) async {
+    try {
+      Database db = await database;
+      int id = await db.insert('reminders', {
+        'plantId': reminder.plantId,
+        'task': reminder.task,
+        'frequency': reminder.frequencyDays,
+        'nextDue': reminder.nextDue.toIso8601String(),
+      });
+      return id;
+    } catch (e) {
+      log.info("Error inserting reminder: $e");
+      return -1;
+    }
+  }
+
   deleteReminder(int id) {}
 
-  void deletePlant(int id) async{
+  Future<List<Reminder>> getActiveAndPastDueReminders() async {
     Database db = await database;
-    int result =  await db.delete(_PLANT_TABLE,where: 'id=?',whereArgs: [id]);
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'reminders',
+      where: 'active = ? AND nextDue <= ?', // Filtrar por `active` y `nextDue`
+      whereArgs: [1, now], // 1 para true, y `now` para la fecha
+    );
+
+    return List.generate(maps.length, (i) {
+      return Reminder.fromMap(maps[i]);
+    });
+  }
+  void updateReminderNextDue(Reminder reminder, DateTime newNextDue) async{
+    Database db = await database;
+    final int newNextDueMillis = newNextDue.millisecondsSinceEpoch;
+    await db.update(
+      _REMINDERS_TABLE,
+      {'nextDue': newNextDueMillis},
+      where: 'id = ?',
+      whereArgs: [reminder.id!],
+    );
+  }
+
+  void deletePlant(int id) async {
+    Database db = await database;
+    int result = await db.delete(_PLANT_TABLE, where: 'id=?', whereArgs: [id]);
     //return result
   }
+
+
 }

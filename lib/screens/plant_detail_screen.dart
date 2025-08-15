@@ -210,7 +210,7 @@ class PlantDetailScreen extends StatelessWidget {
             else
               ...plant.reminders.map(
                 (Reminder reminder) => Text(
-                  '${reminder.task} - ${reminder.frequency} - ${reminder.nextDue}',
+                  '${reminder.task} - ${reminder.frequencyDays} - ${reminder.nextDue}',
                 ),
               ),
           ],

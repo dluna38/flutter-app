@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:myapp/data/plant.dart';
+import 'package:myapp/data/reminder.dart';
 import 'package:myapp/helpers/io_helpers.dart';
+import 'package:myapp/screens/debug_notis.dart';
 import 'package:myapp/screens/plant_detail_screen.dart';
+import 'package:workmanager/workmanager.dart';
 
+import 'data/database_helper.dart';
+import 'helpers/notification_helper.dart';
 import 'screens/add_plant_screen.dart';
 import 'screens/plant_list_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  NotificationHelper.initNotifications();
+  Workmanager().initialize(callbackDispatcher);
+  Workmanager().registerPeriodicTask('schedule-reminder', 'task-schedule-reminder',frequency: Duration(hours: 24),initialDelay: Duration(seconds: 10));
   runApp(const MyApp());
 }
 
@@ -94,7 +105,7 @@ class _NavBarMainState extends State<NavBarMain> {
       body:
           <Widget>[
             HomeScreen(),
-            DummyGridScreen(),
+            PendingNotificationsScreen(),
             GridView.count(
               // Create a grid with 2 columns.
               // If you change the scrollDirection to horizontal,
@@ -165,4 +176,47 @@ class DummyGridScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+//WORKMANAGER TEST
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    switch (task) {
+      case "task-schedule-reminder":
+
+        List<Reminder> list =  await DatabaseHelper().getActiveAndPastDueReminders();
+
+       for(var reminder in list){
+         DateTime newNextDue = reminder.nextDue.add(Duration(days: reminder.frequencyDays));
+         DatabaseHelper().updateReminderNextDue(reminder,newNextDue);
+         reminder.nextDue = newNextDue;
+         Reminder.scheduleNotification(reminder);
+       }
+        break;
+      default:
+      // Handle unknown task types
+        break;
+    }
+
+    //task
+    /*
+    // Schedule a one-time task
+      Workmanager().registerOneOffTask(
+      "sync-task",
+      "data_sync",
+      initialDelay: Duration(seconds: 10),
+      );
+
+      // Schedule a periodic task
+      Workmanager().registerPeriodicTask(
+      "cleanup-task",
+      "cleanup",
+      frequency: Duration(hours: 24),
+      );
+     */
+
+
+    return Future.value(true);
+  });
 }
