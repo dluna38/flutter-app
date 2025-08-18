@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:flutter/cupertino.dart';
+import 'package:myapp/data/database_helper.dart';
 
 import '../helpers/notification_helper.dart';
 
@@ -10,7 +11,7 @@ class Reminder {
   final String task;
   final int frequencyDays;
   DateTime nextDue;
-  bool active;
+  int active;
 
   Reminder({
     this.id,
@@ -24,6 +25,7 @@ class Reminder {
   static void scheduleNotification(Reminder reminder) {
     if(reminder.id == null){
       debugPrint('Reminder id is null');
+      DatabaseHelper().insertLog('reminder id null',level: 'ERROR');
       return;
     }
 
@@ -42,7 +44,7 @@ class Reminder {
       'id': id,
       'plantId': plantId,
       'task': task,
-      'active': active ? 1 : 0,
+      'active': active,
       'nextDue': nextDue.millisecondsSinceEpoch,
       'frequencyDays': frequencyDays,
     };
@@ -50,18 +52,21 @@ class Reminder {
 
   // Método para crear un Reminder desde un mapa de la base de datos
   static Reminder fromMap(Map<String, dynamic> map) {
+
     return Reminder(
       id: map['id'],
       plantId: map['plantId'],
       task: map['task'],
-      active: map['active'] == 1,
+      active:  map['active'] ?? 0,
       nextDue: DateTime.fromMillisecondsSinceEpoch(map['nextDue']),
-      frequencyDays: map['frequencyDays'],
+      frequencyDays: map['frequency'],
     );
   }
 
   @override
   String toString() {
-    return 'Reminder{id: $id, plantId: $plantId, task: $task, frequency: $frequencyDays, nextDue: $nextDue}';
+    return 'Reminder{id: $id, plantId: $plantId, task: $task, frequencyDays: $frequencyDays, nextDue: $nextDue, active: $active}';
   }
+
+
 }

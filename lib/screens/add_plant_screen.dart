@@ -333,7 +333,7 @@ class _FormPlantState extends State<FormPlant> {
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const HomeScreen(),
+                          builder: (context) => const NavBarMain(),
                         ),
                         (route) => false,
                       );

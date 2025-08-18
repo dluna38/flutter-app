@@ -9,11 +9,15 @@ class NotificationHelper {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  static Future<void> initNotifications() async {
-    // Initialize timezone for scheduled notifications
+
+  static void initTimezones() async{
     tz.initializeTimeZones();
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(currentTimeZone));
+  }
+  static Future<void> initNotifications() async {
+    // Initialize timezone for scheduled notifications
+    initTimezones();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -33,7 +37,7 @@ class NotificationHelper {
     required String body,
     required DateTime startTime,
   }) async {
-
+    initTimezones();
     await _notificationsPlugin.zonedSchedule(
       notiId,
       title,

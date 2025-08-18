@@ -3,7 +3,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:myapp/data/plant.dart';
 import 'package:myapp/data/reminder.dart';
 import 'package:myapp/helpers/io_helpers.dart';
+import 'package:myapp/helpers/string_helpers.dart';
 import 'package:myapp/screens/debug_notis.dart';
+import 'package:myapp/screens/logs_list_screen.dart';
 import 'package:myapp/screens/plant_detail_screen.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -17,7 +19,12 @@ void main() {
 
   NotificationHelper.initNotifications();
   Workmanager().initialize(callbackDispatcher);
-  Workmanager().registerPeriodicTask('schedule-reminder', 'task-schedule-reminder',frequency: Duration(hours: 24),initialDelay: Duration(seconds: 10));
+  Workmanager().registerPeriodicTask(
+    'schedule-reminder',
+    'task-schedule-reminder',
+    frequency: Duration(minutes: 15),
+    initialDelay: Duration(seconds: 10),
+  );
   runApp(const MyApp());
 }
 
@@ -62,6 +69,17 @@ class HomeScreen extends StatelessWidget {
         },
         child: Text('+'),
       ),
+      persistentFooterButtons: [
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => LogScreen()),
+            );
+          },
+          child: Text('Logs'),
+        ),
+      ],
       body: PlantListScreen(),
     );
   }
@@ -184,18 +202,26 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     switch (task) {
       case "task-schedule-reminder":
+        try {
+          DatabaseHelper().insertLog('Se ejecuta tarea: task-schedule-reminder');
+          List<Reminder> list =
+                      await DatabaseHelper().getActiveAndPastDueReminders();
+          DatabaseHelper().insertLog('Numbers of Reminders activeAndPast: ${list.length}');
 
-        List<Reminder> list =  await DatabaseHelper().getActiveAndPastDueReminders();
-
-       for(var reminder in list){
-         DateTime newNextDue = reminder.nextDue.add(Duration(days: reminder.frequencyDays));
-         DatabaseHelper().updateReminderNextDue(reminder,newNextDue);
-         reminder.nextDue = newNextDue;
-         Reminder.scheduleNotification(reminder);
-       }
+          for (var reminder in list) {
+                    DateTime newNextDue = reminder.nextDue.add(Duration(days: reminder.frequencyDays));
+                    //DateTime newNextDue = reminder.nextDue.add(Duration(minutes: 16));
+                    DatabaseHelper().updateReminderNextDue(reminder, newNextDue);
+                    reminder.nextDue = newNextDue;
+                    Reminder.scheduleNotification(reminder);
+                  }
+        } catch (e) {
+          DatabaseHelper().insertLog('Error ejecutando tarea: $e',level: LevelLog.error.normalName);
+          return Future.error(false);
+        }
         break;
       default:
-      // Handle unknown task types
+        // Handle unknown task types
         break;
     }
 
@@ -215,7 +241,6 @@ void callbackDispatcher() {
       frequency: Duration(hours: 24),
       );
      */
-
 
     return Future.value(true);
   });

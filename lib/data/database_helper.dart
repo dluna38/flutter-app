@@ -1,5 +1,6 @@
 import 'dart:ffi';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
@@ -54,10 +55,18 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           plantId INTEGER,
           task TEXT,
-          frequency TEXT,
-          nextDue TEXT,
+          frequency INTEGER,
+          nextDue INTEGER,
           active INTEGER
       )
+    ''');
+    await db.execute('''
+      CREATE TABLE logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      timestamp INTEGER,
+      level TEXT,
+      message TEXT
+    );
     ''');
   }
 
@@ -188,7 +197,8 @@ class DatabaseHelper {
         'plantId': reminder.plantId,
         'task': reminder.task,
         'frequency': reminder.frequencyDays,
-        'nextDue': reminder.nextDue.toIso8601String(),
+        'nextDue': reminder.nextDue.millisecondsSinceEpoch,
+        'active': reminder.active
       });
       return id;
     } catch (e) {
@@ -230,5 +240,26 @@ class DatabaseHelper {
     //return result
   }
 
+  Future<void> insertLog(String message, {String level = 'INFO'}) async {
+    debugPrint("$level $message");
+    final Database db = await database;
+    await db.insert(
+      'logs',
+      {
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'level': level,
+        'message': message,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getLogs() async {
+    final Database db = await database;
+    return await db.query(
+      'logs',
+      orderBy: 'timestamp DESC', // Ordena por los más recientes primero
+    );
+  }
 
 }

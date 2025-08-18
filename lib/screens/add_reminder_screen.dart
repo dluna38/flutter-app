@@ -6,6 +6,7 @@ import '../data/plant.dart';
 import '../data/database_helper.dart';
 import '../data/reminder.dart';
 import '../helpers/notification_helper.dart';
+import '../helpers/string_helpers.dart';
 
 class AddReminderScreen extends StatefulWidget {
   final Plant plant;
@@ -51,6 +52,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     }
     DateTime now = DateTime.now();
     DateTime nextDue = DateTime(now.year,now.month,now.day,_selectedTime.hour,_selectedTime.minute).add(Duration(days: days));
+    //DateTime nextDue = now.add(Duration(minutes: 16));
 
 
     Reminder reminder = Reminder(
@@ -58,16 +60,21 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       task: 'Tu planta ${plant.name}: ${_taskController.text}',
       frequencyDays: days,
       nextDue: nextDue,
-      active: true
+      active: 1
     );
-
     debugPrint('remider $reminder');
-    int idReminder = await DatabaseHelper().insertReminder(reminder);
-    reminder.id = idReminder;
-    Reminder.scheduleNotification(reminder);
-    if (context.mounted) {
-      Navigator.pop(context);
+
+    try {
+      int idReminder = await DatabaseHelper().insertReminder(reminder);
+      reminder.id = idReminder;
+      Reminder.scheduleNotification(reminder);
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      DatabaseHelper().insertLog("fallo al insertar el care event",level: LevelLog.error.normalName);
     }
+
   }
 
   @override
