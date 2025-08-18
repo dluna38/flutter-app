@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
+import 'package:myapp/helpers/io_helpers.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -74,6 +75,8 @@ class DatabaseHelper {
   final String _REMINDERS_TABLE = 'reminders';
   Future<int> insertPlant(Plant plant) async {
     try {
+
+      await IOHelpers.saveImageToLocalStorage(plant.imagePath!,imageName: '${plant.name}_${plant.species}');
       Database db = await database;
       int plantId = await db.insert(_PLANT_TABLE, plant.toMap());
       //TODO check reminders

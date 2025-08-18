@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:myapp/data/database_helper.dart';
 import 'package:myapp/data/plant.dart';
-import 'package:myapp/screens/plant_detail_screen.dart';
+import 'package:myapp/screens/old_plant_detail_screen.dart';
+import 'package:myapp/screens/detail_plant_screen.dart';
 
 import '../helpers/io_helpers.dart';
 

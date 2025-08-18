@@ -13,10 +13,10 @@ import 'package:myapp/screens/plant_list_screen.dart';
 
 import '../main.dart';
 
-class PlantDetailScreen extends StatelessWidget {
+class OldPlantDetailScreen extends StatelessWidget {
   final Plant plant;
 
-  const PlantDetailScreen({super.key, required this.plant});
+  const OldPlantDetailScreen({super.key, required this.plant});
 
   String _formatDate(DateTime date) {
     return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";

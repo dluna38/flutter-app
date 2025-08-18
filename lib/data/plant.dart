@@ -19,7 +19,7 @@ class Plant {
     required this.name,
     required this.species,
     required this.location,
-    required this.notes,
+    this.notes,
     this.imagePath,
   }) : careEvents = [],reminders=[];
 

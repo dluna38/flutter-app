@@ -6,7 +6,9 @@ import 'package:myapp/helpers/io_helpers.dart';
 import 'package:myapp/helpers/string_helpers.dart';
 import 'package:myapp/screens/debug_notis.dart';
 import 'package:myapp/screens/logs_list_screen.dart';
-import 'package:myapp/screens/plant_detail_screen.dart';
+import 'package:myapp/screens/old_plant_detail_screen.dart';
+import 'package:myapp/screens/detail_plant_screen.dart';
+
 import 'package:workmanager/workmanager.dart';
 
 import 'data/database_helper.dart';
@@ -78,6 +80,15 @@ class HomeScreen extends StatelessWidget {
             );
           },
           child: Text('Logs'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            /*Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ()),
+            );*/
+          },
+          child: Text('TEST S'),
         ),
       ],
       body: PlantListScreen(),

@@ -43,6 +43,7 @@ dependencies:
   flutter_timezone: ^4.1.1
   workmanager: ^0.8.0
   shared_preferences: ^2.5.3
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
