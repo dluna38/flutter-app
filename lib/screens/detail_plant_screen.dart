@@ -157,10 +157,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           child: _ActionButton(
             icon: iconRegado ? Icons.water_drop:Icons.opacity,
             label: iconRegado? 'Regado':'Regar',
-            onTap: () {
+            onTap: () async {
               if(iconRegado){
                 return;
               }
+              await DatabaseHelper().insertCareEvent(CareEvent.createNow(plant, TypeCareEvent.riego), plant.id!);
+              _careEventsFuture = DatabaseHelper().getCareEvents(plant.id!);
               setState(() {
                 iconRegado = true;
               });

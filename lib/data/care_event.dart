@@ -33,6 +33,14 @@ class CareEvent {
     return careEvent;
   }
 
+  static CareEvent createNow(Plant plant,TypeCareEvent typeCareEvent){
+    return CareEvent(
+        date: DateTime.now(),
+        type: typeCareEvent,
+        plant: plant
+    );
+  }
+
   @override
   String toString() {
     return 'CareEvent{plant: ${plant?.id}, date: $date, type: $type, notes: $notes}';
