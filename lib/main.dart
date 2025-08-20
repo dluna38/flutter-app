@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:myapp/data/plant.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:myapp/data/reminder.dart';
-import 'package:myapp/helpers/io_helpers.dart';
+import 'package:myapp/helpers/my_app_style.dart';
 import 'package:myapp/helpers/string_helpers.dart';
 import 'package:myapp/screens/debug_notis.dart';
 import 'package:myapp/screens/logs_list_screen.dart';
-import 'package:myapp/screens/old_plant_detail_screen.dart';
-import 'package:myapp/screens/detail_plant_screen.dart';
 
 import 'package:workmanager/workmanager.dart';
 
@@ -24,9 +21,10 @@ void main() {
   Workmanager().registerPeriodicTask(
     'schedule-reminder',
     'task-schedule-reminder',
-    frequency: Duration(minutes: 15),
+    frequency: Duration(hours: 24),
     initialDelay: Duration(seconds: 10),
   );
+  initializeDateFormatting();
   runApp(const MyApp());
 }
 
@@ -38,10 +36,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PlantApp',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightGreen),
-        useMaterial3: true,
-      ),
+      theme: MyAppStyle.lightTheme,
+      darkTheme: MyAppStyle.darkTheme,
+      themeMode: ThemeMode.system,
       routes: {
         '/': (context) => const NavBarMain(),
         '/add_plant': (context) => const AddPlantScreen(),
@@ -58,9 +55,9 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         leading: const Icon(Icons.eco),
-        title: const Text("Mis Plantas"),
+        title:  Text("Mis Plantas",style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
       ),
       floatingActionButton: ElevatedButton(
         onPressed: () {
@@ -81,15 +78,15 @@ class HomeScreen extends StatelessWidget {
           },
           child: Text('Logs'),
         ),
-        ElevatedButton(
+        /*ElevatedButton(
           onPressed: () {
-            /*Navigator.push(
+            Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ()),
-            );*/
+              MaterialPageRoute(builder: (context) => (TestAddReminderScreen())),
+            );
           },
           child: Text('TEST S'),
-        ),
+        ),*/
       ],
       body: PlantListScreen(),
     );

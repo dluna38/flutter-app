@@ -60,6 +60,7 @@ class CardPlant extends StatelessWidget {
       height: 100,
       child:
         Card(
+          //color: Theme.of(context).colorScheme.onSurface.withValues(a),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
             onTap: () {

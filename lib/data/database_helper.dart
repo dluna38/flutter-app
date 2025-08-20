@@ -46,8 +46,8 @@ class DatabaseHelper {
       CREATE TABLE care_events(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           plantId INTEGER,
-          date TEXT,
-          type TEXT,
+          date INTEGER,
+          type INTEGER,
           notes TEXT
       )
     ''');
@@ -71,8 +71,11 @@ class DatabaseHelper {
     ''');
   }
 
-  final String _PLANT_TABLE = "plants";
-  final String _REMINDERS_TABLE = 'reminders';
+  static const String _PLANT_TABLE = "plants";
+  static const String _REMINDERS_TABLE = 'reminders';
+  static const String _CARE_EVENTS_TABLE = 'care_events';
+
+  //PLANTS
   Future<int> insertPlant(Plant plant) async {
     try {
 
@@ -95,22 +98,6 @@ class DatabaseHelper {
       return -1;
     }
   }
-
-  Future<int> insertCareEvent(CareEvent careEvent, int plantId) async {
-    try {
-      Database db = await database;
-      return await db.insert('care_events', {
-        'plantId': plantId,
-        'date': careEvent.date.toIso8601String(),
-        'type': careEvent.type,
-        'notes': careEvent.notes,
-      });
-    } catch (e) {
-      log.severe("Error inserting care event: $e");
-      return -1;
-    }
-  }
-
   Future<List<Plant>> getPlants() async {
     Database db = await database;
     final List<Map<String, dynamic>> maps = await db.query('plants');
@@ -155,7 +142,41 @@ class DatabaseHelper {
     //checkReminders(plants);
     return plants;
   }
+  void deletePlant(int id) async {
+    Database db = await database;
+    int result = await db.delete(_PLANT_TABLE, where: 'id=?', whereArgs: [id]);
+    //return result
+  }
 
+  //CARE EVENTS
+  Future<int> insertCareEvent(CareEvent careEvent, int plantId) async {
+    try {
+      Database db = await database;
+      careEvent.plant?.id = plantId;
+      return await db.insert('care_events', careEvent.toMap());
+    } catch (e) {
+      log.severe("Error inserting care event: $e");
+      return -1;
+    }
+  }
+  deleteCareEvent(int id) {}
+
+  Future<List<CareEvent>> getCareEvents(int plantId) async{
+    Database db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      _CARE_EVENTS_TABLE,
+      where: 'plantId=?',
+      whereArgs: [plantId],
+      orderBy: 'date DESC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return CareEvent.fromMap(maps[i]);
+    });
+  }
+
+  //REMINDERS
   Future<void> checkReminders([List<Plant>? plants]) async {
     Database db = await database;
     final List<Map<String, dynamic>> remindersMap = await db.query('reminders');
@@ -191,7 +212,6 @@ class DatabaseHelper {
     }
   }
 
-  deleteCareEvent(int id) {}
 
   Future<int> insertReminder(Reminder reminder) async {
     try {
@@ -211,7 +231,20 @@ class DatabaseHelper {
   }
 
   deleteReminder(int id) {}
+  Future<List<Reminder>> getReminders(int plantId) async{
+    Database db = await database;
 
+    final List<Map<String, dynamic>> maps = await db.query(
+      _REMINDERS_TABLE,
+      where: 'plantId=?',
+      whereArgs: [plantId],
+      orderBy: 'id DESC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return Reminder.fromMap(maps[i]);
+    });
+  }
   Future<List<Reminder>> getActiveAndPastDueReminders() async {
     Database db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -226,6 +259,7 @@ class DatabaseHelper {
       return Reminder.fromMap(maps[i]);
     });
   }
+
   void updateReminderNextDue(Reminder reminder, DateTime newNextDue) async{
     Database db = await database;
     final int newNextDueMillis = newNextDue.millisecondsSinceEpoch;
@@ -237,12 +271,7 @@ class DatabaseHelper {
     );
   }
 
-  void deletePlant(int id) async {
-    Database db = await database;
-    int result = await db.delete(_PLANT_TABLE, where: 'id=?', whereArgs: [id]);
-    //return result
-  }
-
+  //LOGS
   Future<void> insertLog(String message, {String level = 'INFO'}) async {
     debugPrint("$level $message");
     final Database db = await database;

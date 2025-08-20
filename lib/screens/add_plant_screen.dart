@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:myapp/data/database_helper.dart';
 import 'package:myapp/data/plant.dart';
 import 'package:image_picker/image_picker.dart';
@@ -45,6 +46,7 @@ class _FormPlantState extends State<FormPlant> {
   final _locationController = TextEditingController();
   final _notesController = TextEditingController();
   final hintStyle = TextStyle(color: Colors.grey[400]);
+  DateTime? _selectedDate;
 
   String? _imagePath;
 
@@ -68,7 +70,20 @@ class _FormPlantState extends State<FormPlant> {
       }
     });
   }
-
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      debugPrint('Guardar: $picked');
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -82,7 +97,8 @@ class _FormPlantState extends State<FormPlant> {
                 width: double.infinity,
                 height: 180,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+
+                  color: Theme.of(context).brightness ==Brightness.light ? Colors.grey[300]:Colors.grey[700],
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: Colors.grey[400]!,
@@ -201,6 +217,18 @@ class _FormPlantState extends State<FormPlant> {
               hintStyle: hintStyle,
             ),
           ),
+          Row(
+            children: [
+              Text(
+                'Fecha de adquisición: ${DateFormat('dd-MM-yyyy').format(_selectedDate!)}',
+                style: const TextStyle(fontSize: 16),
+              ),
+              IconButton(
+                icon: const Icon(Icons.calendar_today),
+                onPressed: () => _selectDate(context),
+              ),
+            ],
+          ),
           TextFormField(
             controller: _notesController,
             maxLines: 4,
@@ -229,6 +257,7 @@ class _FormPlantState extends State<FormPlant> {
                               ? null
                               : _notesController.text.trim(),
                       imagePath: _imagePath,
+                      acquisitionDate: _selectedDate
                     );
                     debugPrint('Guardar: $plant');
                     await DatabaseHelper().insertPlant(plant);

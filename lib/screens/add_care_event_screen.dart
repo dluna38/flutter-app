@@ -60,11 +60,18 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green[300],
         title: const Text('Agregar evento'),
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: () {
+            Navigator.pop(context,false);
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -131,35 +138,54 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
               decoration: const InputDecoration(labelText: 'Notes'),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                final newCareEvent = CareEvent(
-                  date: DateTime(
-                    _selectedDate.year,
-                    _selectedDate.month,
-                    _selectedDate.day,
-                    _selectedTime.hour,
-                    _selectedTime.minute,
-                  ),
-                  type: selectedTypeEvent,
-                  notes:
+            const Spacer(),
+            // Botón para guardar
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final newCareEvent = CareEvent(
+                      date: DateTime(
+                        _selectedDate.year,
+                        _selectedDate.month,
+                        _selectedDate.day,
+                        _selectedTime.hour,
+                        _selectedTime.minute,
+                      ),
+                      type: selectedTypeEvent,
+                      notes:
                       _notesController.text.isEmpty
                           ? null
                           : _notesController.text,
-                  plant: plant
-                );
-                debugPrint('new event $newCareEvent');
-                return;
-                await DatabaseHelper().insertCareEvent(
-                  newCareEvent,
-                  widget.plant.id!,
-                );
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Saves'),
+                      plant: plant
+                  );
+                  debugPrint('new event $newCareEvent');
+                  await DatabaseHelper().insertCareEvent(
+                    newCareEvent,
+                    widget.plant.id!,
+                  );
+                  if (context.mounted) {
+                    Navigator.pop(context,true);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Guardar evento',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),

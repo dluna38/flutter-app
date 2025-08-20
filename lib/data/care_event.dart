@@ -9,21 +9,24 @@ class CareEvent {
 
   CareEvent({required this.date, required this.type, this.notes, this.plant});
 
-  Map<String, Object?> toMap() {
-    return {
-      'id': id,
+  Map<String, Object?> toMap({bool withId=false}) {
+    Map<String, Object?> map ={
       'plantId': plant?.id,
-      'date': date.toIso8601String(),
-      'type': type,
+      'date': date.millisecondsSinceEpoch,
+      'type': type.index,
       'notes': notes,
     };
+    if(withId){
+      map['id']=id;
+    }
+    return map;
   }
 
   static CareEvent fromMap(Map<String, dynamic> map) {
     CareEvent careEvent = CareEvent(
-      date: DateTime.parse(map['date'] as String),
-      type: map['type'] as TypeCareEvent,
-      notes: map['notes'] as String,
+      date: DateTime.fromMillisecondsSinceEpoch(map['date']),
+      type: TypeCareEvent.values[map['type']],
+      notes: map['notes'] as String?,
       plant: map['plant'] as Plant?,
     );
     careEvent.id = map['id'] as int?;

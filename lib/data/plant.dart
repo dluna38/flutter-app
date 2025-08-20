@@ -11,6 +11,7 @@ class Plant {
   String? location;
   String? notes;
   String? imagePath;
+  DateTime? acquisitionDate;
   List<CareEvent> careEvents;
   List<Reminder> reminders;
 
@@ -21,6 +22,7 @@ class Plant {
     required this.location,
     this.notes,
     this.imagePath,
+    this.acquisitionDate
   }) : careEvents = [],reminders=[];
 
   Map<String, Object?> toMap([bool withEvents = false]) {
@@ -31,6 +33,7 @@ class Plant {
       'location': location,
       'notes': notes,
       'imagePath': imagePath,
+      'acquisitionDate':acquisitionDate?.millisecondsSinceEpoch
     };
     if(withEvents){
       map['careEvents'] = careEvents.map((e) => e.toMap()).toList();
@@ -46,6 +49,9 @@ class Plant {
       notes: map['notes'] as String,
       imagePath: map['imagePath'] as String?,
     );
+    if(map['acquisitionDate'] != null){
+      plant.acquisitionDate = DateTime.fromMillisecondsSinceEpoch(map['acquisitionDate']);
+    }
     plant.id = map['id'] as int?;
     if(map['careEvents'] != null){
       plant.careEvents = (map['careEvents'] as List).map((e) => CareEvent.fromMap(e)).toList();

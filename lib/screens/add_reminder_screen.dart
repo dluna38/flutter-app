@@ -19,6 +19,7 @@ class AddReminderScreen extends StatefulWidget {
 
 class _AddReminderScreenState extends State<AddReminderScreen> {
   late Plant plant;
+  late ColorScheme colorScheme;
   @override
   void initState() {
     // TODO: implement initState
@@ -28,7 +29,6 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
 
   final TextEditingController _taskController = TextEditingController();
   final TextEditingController _daysController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay(hour: 9, minute: 0);
 
   Future<void> _selectTime(BuildContext context) async {
@@ -51,16 +51,21 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       return;
     }
     DateTime now = DateTime.now();
-    DateTime nextDue = DateTime(now.year,now.month,now.day,_selectedTime.hour,_selectedTime.minute).add(Duration(days: days));
+    DateTime nextDue = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    ).add(Duration(days: days));
     //DateTime nextDue = now.add(Duration(minutes: 16));
-
 
     Reminder reminder = Reminder(
       plantId: widget.plant.id!,
       task: 'Tu planta ${plant.name}: ${_taskController.text}',
       frequencyDays: days,
       nextDue: nextDue,
-      active: 1
+      active: 1,
     );
     debugPrint('remider $reminder');
 
@@ -72,15 +77,18 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      DatabaseHelper().insertLog("fallo al insertar el care event",level: LevelLog.error.normalName);
+      DatabaseHelper().insertLog(
+        "fallo al insertar el care event",
+        level: LevelLog.error.normalName,
+      );
     }
-
   }
 
   @override
   Widget build(BuildContext context) {
+    colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Reminder'), centerTitle: true),
+      appBar: AppBar(title: const Text('Agregar recordatorio'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -113,10 +121,32 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
             ),
 
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveReminder,
-              child: const Text('Save Reminder'),
+            const Spacer(),
+            // Botón para guardar
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  _saveReminder();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Save Reminder',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
