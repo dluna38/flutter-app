@@ -50,6 +50,14 @@ class Reminder {
     };
   }
 
+  void delete(){
+    if(id ==null){
+      return;
+    }
+    NotificationHelper.cancelReminder(id!);
+    DatabaseHelper().deleteReminder(id!);
+  }
+
   // Método para crear un Reminder desde un mapa de la base de datos
   static Reminder fromMap(Map<String, dynamic> map) {
 

@@ -220,7 +220,7 @@ class _FormPlantState extends State<FormPlant> {
           Row(
             children: [
               Text(
-                'Fecha de adquisición: ${DateFormat('dd-MM-yyyy').format(_selectedDate!)}',
+                'Fecha de adquisición: ${_selectedDate != null ?DateFormat('dd-MM-yyyy').format(_selectedDate!):''}',
                 style: const TextStyle(fontSize: 16),
               ),
               IconButton(
@@ -260,7 +260,12 @@ class _FormPlantState extends State<FormPlant> {
                       acquisitionDate: _selectedDate
                     );
                     debugPrint('Guardar: $plant');
-                    await DatabaseHelper().insertPlant(plant);
+
+                    try {
+                      await DatabaseHelper().insertPlant(plant);
+                    } catch (e) {
+                      debugPrint(e as String?);
+                    }
                     if (context.mounted) {
                       Navigator.pushAndRemoveUntil(
                         context,

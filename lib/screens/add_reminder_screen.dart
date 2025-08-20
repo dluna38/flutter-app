@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/helpers/notification_helper.dart';
+import '../data/care_event.dart';
 import '../data/plant.dart';
 import '../data/database_helper.dart';
 import '../data/reminder.dart';
@@ -30,6 +31,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
   final TextEditingController _taskController = TextEditingController();
   final TextEditingController _daysController = TextEditingController();
   TimeOfDay _selectedTime = TimeOfDay(hour: 9, minute: 0);
+  TypeCareEvent? _selectedTypeEvent;
 
   Future<void> _selectTime(BuildContext context) async {
     TimeOfDay? pickedTime = await showTimePicker(
@@ -45,9 +47,22 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     }
   }
 
-  void _saveReminder() async {
+  void _saveReminder(BuildContext context) async {
+    // Valida que el campo de tarea no esté vacío
+    if (_taskController.text.trim().isEmpty) {
+      // Muestra un mensaje al usuario si el campo está vacío
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, ingresa qué recordar.')),
+      );
+      return;
+    }
+
     int? days = int.tryParse(_daysController.text);
     if (days == null || days < 1) {
+      // Muestra un mensaje al usuario si los días no son válidos
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, ingresa un número válido de días.')),
+      );
       return;
     }
     DateTime now = DateTime.now();
@@ -74,7 +89,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       reminder.id = idReminder;
       Reminder.scheduleNotification(reminder);
       if (context.mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     } catch (e) {
       DatabaseHelper().insertLog(
@@ -88,12 +103,59 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
   Widget build(BuildContext context) {
     colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Agregar recordatorio'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Agregar recordatorio'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: () {
+            Navigator.pop(context, false);
+          },
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SegmentedButton<TypeCareEvent>(
+              segments: const <ButtonSegment<TypeCareEvent>>[
+                ButtonSegment<TypeCareEvent>(
+                  value: TypeCareEvent.riego,
+                  label: Text('Riego'),
+                  icon: Icon(Icons.water_drop),
+                ),
+                ButtonSegment<TypeCareEvent>(
+                  value: TypeCareEvent.fertilizante,
+                  label: Text('Fertilizante'),
+                  icon: Icon(Icons.grain),
+                ),
+                ButtonSegment<TypeCareEvent>(
+                  value: TypeCareEvent.poda,
+                  label: Text('Poda'),
+                  icon: Icon(Icons.cut),
+                ),
+                ButtonSegment<TypeCareEvent>(
+                  value: TypeCareEvent.cambioAbono,
+                  label: Text('C. tierra'),
+                  icon: Icon(Icons.energy_savings_leaf),
+                ),
+              ],
+              emptySelectionAllowed: true,
+              selected: _selectedTypeEvent != null ? <TypeCareEvent>{_selectedTypeEvent!} : <TypeCareEvent>{},
+              onSelectionChanged: (Set<TypeCareEvent> newSelection) {
+                setState(() {
+                  if (newSelection.isEmpty) {
+                    _selectedTypeEvent = null; // No hay selección
+                    _taskController.text = ''; // Borra el texto del TextField
+                  } else {
+                    _selectedTypeEvent = newSelection.first; // Establece la nueva selección
+                    // Actualiza el texto del TextField según la selección
+                    _taskController.text = _selectedTypeEvent!.normalName;
+                  }
+                });
+              },
+            ),
             TextField(
               controller: _taskController,
               decoration: const InputDecoration(labelText: 'Que recordar?'),
@@ -127,7 +189,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  _saveReminder();
+                  _saveReminder(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,

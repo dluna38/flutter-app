@@ -13,9 +13,17 @@ class IOHelpers {
     return path != null
         ? CircleAvatar(backgroundImage: FileImage(File(path!)), radius: 30)
         : CircleAvatar(
-          backgroundImage: AssetImage('resources/placeholder-img.jpg'),
+          backgroundImage: getImagePlaceHolder(),
           radius: 30,
         );
+  }
+
+  static AssetImage getImagePlaceHolder({String path = 'resources/placeholder-img.jpg'}){
+    return AssetImage(path);
+  }
+
+  static String getImagePlaceHolderString({String path = 'resources/placeholder-img.jpg'}){
+    return path;
   }
 
   static Future<File> saveImageToLocalStorage(String tempPath,{String imageName="image"}) async{

@@ -39,7 +39,8 @@ class DatabaseHelper {
           species TEXT,
           location TEXT,
           notes TEXT,
-          imagePath TEXT
+          imagePath TEXT,
+          acquisitionDate INTEGER
       )
     ''');
     await db.execute('''
@@ -78,19 +79,11 @@ class DatabaseHelper {
   //PLANTS
   Future<int> insertPlant(Plant plant) async {
     try {
-
-      await IOHelpers.saveImageToLocalStorage(plant.imagePath!,imageName: '${plant.name}_${plant.species}');
+      if(plant.imagePath!= null){
+        await IOHelpers.saveImageToLocalStorage(plant.imagePath!,imageName: '${plant.name}_${plant.species}');
+      }
       Database db = await database;
       int plantId = await db.insert(_PLANT_TABLE, plant.toMap());
-      //TODO check reminders
-      /*for (var reminder in plant.reminders) {
-        await db.insert('reminders', {
-          'plantId': plantId,
-          'task': reminder.task,
-          'frequency': reminder.frequency,
-          'nextDue': reminder.nextDue.toIso8601String(),
-        });
-      }*/
 
       return plantId;
     } catch (e) {
@@ -230,7 +223,10 @@ class DatabaseHelper {
     }
   }
 
-  deleteReminder(int id) {}
+  Future<int> deleteReminder(int id) async{
+    Database db = await database;
+    return await db.delete(_REMINDERS_TABLE, where: 'id=?', whereArgs: [id]);
+  }
   Future<List<Reminder>> getReminders(int plantId) async{
     Database db = await database;
 

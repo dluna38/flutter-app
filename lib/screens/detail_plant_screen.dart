@@ -26,6 +26,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   late final Plant plant;
   late Future<List<CareEvent>> _careEventsFuture;
   late Future<List<Reminder>> _remindersFuture;
+  List<Reminder> loadedReminders = [];
+  bool iconRegado=false;
   @override
   void initState() {
     super.initState();
@@ -35,6 +37,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 
   void _removeReminder(int index) {
+    Reminder reminder = loadedReminders[index];
+    reminder.delete();
+    _remindersFuture = DatabaseHelper().getReminders(plant.id!);
+    setState(() {
+      loadedReminders.removeAt(index);
+    });
 
   }
 
@@ -71,12 +79,14 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           style: TextStyle(
               color: colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16.0),
         ),
-        background: Image.file(
+        background: plant.imagePath != null ? Image.file(
           File(plant.imagePath ?? IOHelpers.defaultPlaceholder),
           fit: BoxFit.cover,
           colorBlendMode: BlendMode.darken,
           color: Colors.black.withValues(alpha: 0.4),
-        ),
+        ): Image.asset(IOHelpers.getImagePlaceHolderString(),fit: BoxFit.cover,
+          colorBlendMode: BlendMode.darken,
+          color: Colors.black.withValues(alpha: 0.4),),
       ),
     );
   }
@@ -132,6 +142,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 
   Widget _buildActionButtons() {
+
     return Row(
       children: [
         Expanded(
@@ -144,9 +155,16 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: _ActionButton(
-            icon: Icons.opacity,
-            label: 'Regar',
+            icon: iconRegado ? Icons.water_drop:Icons.opacity,
+            label: iconRegado? 'Regado':'Regar',
             onTap: () {
+              if(iconRegado){
+                return;
+              }
+              setState(() {
+                iconRegado = true;
+              });
+
               /*
               TODO
               change icon Icons.water_drop and text: Regado and disable button
@@ -208,13 +226,16 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           ),
         ),
         TextButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AddReminderScreen(plant: plant),
-              ),
-            );
+          onPressed: () async {
+            bool? result = await Navigator.push<bool>(context, MaterialPageRoute<bool>(
+              builder: (context) => AddReminderScreen(plant: plant),
+            ));
+            //se actualiza sin importar que el usuario cancele el agregado
+            if(result == null || result){
+              setState(() {
+                _remindersFuture = DatabaseHelper().getReminders(plant.id!);
+              });
+            }
           },
           icon:  Icon(Icons.add, color: colorScheme.primary, size: 20),
           label:  Text(
@@ -261,15 +282,14 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         }
 
         // ESTADO 4: Datos cargados exitosamente
-        final activeReminders = snapshot.data!;
-        // Usamos ListView.builder para construir la lista dinámicamente
-
+        loadedReminders = snapshot.data!;
+        
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: activeReminders.length,
+          itemCount: loadedReminders.length,
           itemBuilder: (context, index) {
-            final reminder = activeReminders[index];
+            final reminder = loadedReminders[index];
             return _ReminderCard(
               reminderText: reminder.task,
               frequencyDays: '${reminder.frequencyDays}',
@@ -315,10 +335,13 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
         // ESTADO 3: Datos cargados, pero la lista está vacía
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 20.0),
-              child: Text('Aún no hay eventos registrados.'),
+              padding: const EdgeInsets.symmetric(vertical: 20.0),
+              child: Text(
+              'No hay eventos registrados.',
+              style: TextStyle(color: colorScheme.onSurface, fontSize: 16),
+            ),
             ),
           );
         }
