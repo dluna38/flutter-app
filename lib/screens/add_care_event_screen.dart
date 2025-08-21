@@ -63,7 +63,6 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green[300],
         title: const Text('Agregar evento'),
         centerTitle: true,
         leading: IconButton(

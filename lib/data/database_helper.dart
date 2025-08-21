@@ -79,11 +79,59 @@ class DatabaseHelper {
   //PLANTS
   Future<int> insertPlant(Plant plant) async {
     try {
+
       if(plant.imagePath!= null){
-        await IOHelpers.saveImageToLocalStorage(plant.imagePath!,imageName: '${plant.name}_${plant.species}');
+        plant.imagePath= (await IOHelpers.saveImageToLocalStorage(plant.imagePath!,imageName: '${plant.name}_${plant.species}')).path;
       }
       Database db = await database;
       int plantId = await db.insert(_PLANT_TABLE, plant.toMap());
+
+      return plantId;
+    } catch (e) {
+      log.severe("Error inserting plant: $e");
+      return -1;
+    }
+  }
+  Future<int> updatePlant(Plant newPlant,Plant oldPlant) async {
+    try {
+      Map<String, Object?> map = {};
+      if(newPlant.name != oldPlant.name){
+        map['name'] = newPlant.name;
+      }
+      if(newPlant.species != oldPlant.species){
+        map['species'] = newPlant.species;
+      }
+      if(newPlant.location != oldPlant.location){
+        map['location'] = newPlant.location;
+      }
+      if(newPlant.notes != oldPlant.notes){
+        map['notes'] = newPlant.notes;
+      }
+      if(newPlant.acquisitionDate != oldPlant.acquisitionDate){
+        map['acquisitionDate'] = newPlant.acquisitionDate?.millisecondsSinceEpoch;
+      }
+
+
+      if(newPlant.imagePath!= null && newPlant.imagePath != oldPlant.imagePath){
+        //delete old image - check if null
+        if(oldPlant.imagePath !=null){
+          IOHelpers.removeImageFromLocalStorage(oldPlant.imagePath!);
+        }
+        map['imagePath'] = (await IOHelpers.saveImageToLocalStorage(newPlant.imagePath!,imageName: '${newPlant.name}_${newPlant.species}')).path;
+      }
+      if(newPlant.imagePath== null && oldPlant.imagePath!=null){
+        await IOHelpers.removeImageFromLocalStorage(oldPlant.imagePath!);
+        // Establecemos la ruta de la imagen a null en el mapa para la base de datos
+        map['imagePath'] = null;
+      }
+
+      if (map.isEmpty) {
+        return oldPlant.id!; // No hay cambios, devuelve el ID existente
+      }
+
+
+      Database db = await database;
+      int plantId = await db.update(_PLANT_TABLE, map,where: 'id=?',whereArgs: [oldPlant.id]);
 
       return plantId;
     } catch (e) {
@@ -105,36 +153,21 @@ class DatabaseHelper {
       );
     });
 
-    /*for (var plant in plants) {
-      final List<Map<String, dynamic>> careEventsMap = await db.query(
-        'care_events',
-        where: 'plantId = ?',
-        whereArgs: [plant.id],
-      );
-      plant.careEvents = List.generate(careEventsMap.length, (i) {
-        return CareEvent(
-          date: DateTime.parse(careEventsMap[i]['date']),
-          type: careEventsMap[i]['type'],
-          notes: careEventsMap[i]['notes'],
-        );
-      });
-      final List<Map<String, dynamic>> remindersMap = await db.query(
-        'reminders',
-        where: 'plantId = ?',
-        whereArgs: [plant.id],
-      );
-      plant.reminders = List.generate(remindersMap.length, (i) {
-        return Reminder(
-          plantId: remindersMap[i]['plantId'],
-          task: remindersMap[i]['task'],
-          frequency: remindersMap[i]['frequency'],
-          nextDue: DateTime.parse(remindersMap[i]['nextDue']),
-        );
-      });
-    }*/
-    //checkReminders(plants);
     return plants;
   }
+  Future<Plant?> getPlantById(int id) async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(
+      _PLANT_TABLE,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) {
+      return Plant.fromMap(maps.first);
+    }
+    return null;
+  }
+
   void deletePlant(int id) async {
     Database db = await database;
     int result = await db.delete(_PLANT_TABLE, where: 'id=?', whereArgs: [id]);

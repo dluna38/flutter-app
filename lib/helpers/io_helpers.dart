@@ -38,7 +38,19 @@ class IOHelpers {
 
     return localImage;
   }
-
+  static Future<void> removeImageFromLocalStorage(String imagePath) async {
+    try {
+      final File imageFile = File(imagePath);
+      // Verifica si el archivo existe antes de intentar eliminarlo
+      if (await imageFile.exists()) {
+        await imageFile.delete();
+      } else {
+        debugPrint('La imagen no existe en la ruta especificada: $imagePath');
+      }
+    } catch (e) {
+      debugPrint('Error al eliminar la imagen $imagePath: $e');
+    }
+  }
 
   static Future<void> assureOrCreatePath(path) async{
     Directory directory = Directory(path);

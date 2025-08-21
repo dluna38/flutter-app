@@ -9,31 +9,40 @@ import 'package:myapp/helpers/string_helpers.dart';
 import '../main.dart';
 
 class AddPlantScreen extends StatelessWidget {
-  const AddPlantScreen({super.key});
+  final Plant? updatePlant;
+  const AddPlantScreen({super.key, this.updatePlant});
 
   @override
   Widget build(BuildContext context) {
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Agregar planta'),
+        title: Text('${updatePlant == null ? 'Agregar' : 'Editar'} planta'),
         centerTitle: true,
-        //leading: const Icon(Icons.local_florist_outlined),
-        backgroundColor: Colors.green[300],
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+          onPressed: () {
+            Navigator.pop(context, PlantResult());
+          },
+        ),
+        backgroundColor: colorScheme.surface,
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [FormPlant()],
+            children: [FormPlant(updatePlant: updatePlant)],
           ),
         ),
       ),
     );
   }
 }
+
 class FormPlant extends StatefulWidget {
-  const FormPlant({super.key});
+  final Plant? updatePlant;
+  const FormPlant({super.key, this.updatePlant});
 
   @override
   State<FormPlant> createState() => _FormPlantState();
@@ -47,12 +56,34 @@ class _FormPlantState extends State<FormPlant> {
   final _notesController = TextEditingController();
   final hintStyle = TextStyle(color: Colors.grey[400]);
   DateTime? _selectedDate;
-
   String? _imagePath;
+
+  late final Plant? oldPlant;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    if (widget.updatePlant != null) {
+      oldPlant = widget.updatePlant!;
+
+      debugPrint("update: ${widget.updatePlant!.id}");
+
+      _nameController.text = oldPlant!.name;
+      _speciesController.text = oldPlant!.species ?? "";
+      _locationController.text = oldPlant!.location ?? "";
+      _notesController.text = oldPlant!.notes ?? "";
+      _selectedDate = oldPlant!.acquisitionDate;
+      _imagePath = oldPlant!.imagePath;
+    }
+  }
 
   Future<void> _getImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery,imageQuality: 70);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
 
     setState(() {
       if (pickedFile != null) {
@@ -70,6 +101,7 @@ class _FormPlantState extends State<FormPlant> {
       }
     });
   }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -84,6 +116,7 @@ class _FormPlantState extends State<FormPlant> {
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -97,8 +130,10 @@ class _FormPlantState extends State<FormPlant> {
                 width: double.infinity,
                 height: 180,
                 decoration: BoxDecoration(
-
-                  color: Theme.of(context).brightness ==Brightness.light ? Colors.grey[300]:Colors.grey[700],
+                  color:
+                      Theme.of(context).brightness == Brightness.light
+                          ? Colors.grey[300]
+                          : Colors.grey[700],
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: Colors.grey[400]!,
@@ -220,7 +255,7 @@ class _FormPlantState extends State<FormPlant> {
           Row(
             children: [
               Text(
-                'Fecha de adquisición: ${_selectedDate != null ?DateFormat('dd-MM-yyyy').format(_selectedDate!):''}',
+                'Fecha de adquisición: ${_selectedDate != null ? DateFormat('dd-MM-yyyy').format(_selectedDate!) : ''}',
                 style: const TextStyle(fontSize: 16),
               ),
               IconButton(
@@ -257,23 +292,28 @@ class _FormPlantState extends State<FormPlant> {
                               ? null
                               : _notesController.text.trim(),
                       imagePath: _imagePath,
-                      acquisitionDate: _selectedDate
+                      acquisitionDate: _selectedDate,
                     );
-                    debugPrint('Guardar: $plant');
+
+                    debugPrint(
+                      'Guardar: $plant ${oldPlant != null ? ' update' : ''}',
+                    );
 
                     try {
-                      await DatabaseHelper().insertPlant(plant);
+                      if (oldPlant != null) {
+                        await DatabaseHelper().updatePlant(plant, oldPlant!);
+                      } else {
+                        await DatabaseHelper().insertPlant(plant);
+                      }
                     } catch (e) {
                       debugPrint(e as String?);
                     }
                     if (context.mounted) {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NavBarMain(),
-                        ),
-                        (route) => false,
-                      );
+                      if (oldPlant != null) {
+                        Navigator.pop(context, PlantResult(updated: true));
+                      } else {
+                        Navigator.pop(context, PlantResult(created: true));
+                      }
                     }
                   }
                 },
@@ -285,4 +325,11 @@ class _FormPlantState extends State<FormPlant> {
       ),
     );
   }
+}
+
+class PlantResult {
+  final bool created;
+  final bool updated;
+
+  PlantResult({this.created = false, this.updated = false});
 }

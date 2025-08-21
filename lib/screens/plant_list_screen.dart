@@ -16,11 +16,21 @@ class PlantListScreen extends StatefulWidget {
 }
 
 class _PlantListScreenState extends State<PlantListScreen> {
+  late Future<List<Plant>> _plantsFuture;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _plantsFuture = DatabaseHelper().getPlants();
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: FutureBuilder<List<Plant>>(
-        future: DatabaseHelper().getPlants(),
+        future: _plantsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

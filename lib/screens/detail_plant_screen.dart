@@ -9,6 +9,7 @@ import 'package:myapp/data/reminder.dart';
 import 'package:myapp/helpers/io_helpers.dart';
 import 'package:myapp/helpers/my_app_style.dart';
 import 'package:myapp/helpers/string_helpers.dart';
+import 'package:myapp/screens/add_plant_screen.dart';
 
 import 'add_care_event_screen.dart';
 import 'add_reminder_screen.dart';
@@ -23,7 +24,7 @@ class PlantDetailScreen extends StatefulWidget {
 }
 
 class _PlantDetailScreenState extends State<PlantDetailScreen> {
-  late final Plant plant;
+  late Plant plant;
   late Future<List<CareEvent>> _careEventsFuture;
   late Future<List<Reminder>> _remindersFuture;
   List<Reminder> loadedReminders = [];
@@ -149,7 +150,20 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           child: _ActionButton(
             icon: Icons.edit,
             label: 'Editar Planta',
-            onTap: () {},
+            onTap: () async{
+              PlantResult? result = await Navigator.push<PlantResult>(context, MaterialPageRoute<PlantResult>(
+                builder: (context) => AddPlantScreen(updatePlant: plant,),
+              ));
+
+              if(result !=null && result.updated){
+                Plant? freshPlant = await DatabaseHelper().getPlantById(plant.id!);
+                if(freshPlant != null){
+                  setState(() {
+                    plant = freshPlant;
+                  });
+                }
+              }
+            },
           ),
         ),
         const SizedBox(width: 16),
