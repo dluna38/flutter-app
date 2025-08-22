@@ -28,7 +28,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   late Future<List<CareEvent>> _careEventsFuture;
   late Future<List<Reminder>> _remindersFuture;
   List<Reminder> loadedReminders = [];
-  bool iconRegado=false;
+  bool iconRegado = false;
+  bool plantUpdated = false;
   @override
   void initState() {
     super.initState();
@@ -44,19 +45,31 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     setState(() {
       loadedReminders.removeAt(index);
     });
+  }
 
+  void _deletePlant() {
+    DatabaseHelper().deletePlant(plant.id!);
+    Navigator.pop(context, PlantResult(updated: true));
   }
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      //backgroundColor: colorScheme.surface,
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(colorScheme),
-          _buildContent(colorScheme),
-        ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && context.mounted) {
+          Navigator.pop(context, PlantResult(updated: plantUpdated));
+        }
+      },
+      child: Scaffold(
+        //backgroundColor: colorScheme.surface,
+        body: CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(colorScheme),
+            _buildContent(colorScheme),
+          ],
+        ),
       ),
     );
   }
@@ -70,24 +83,49 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
         onPressed: () {
-          Navigator.pop(context);
+          Navigator.pop(context, PlantResult(updated: plantUpdated));
         },
       ),
+      actions: [
+        PopupMenuButton<String>(
+          icon: Icon(Icons.more_vert, color: colorScheme.onSurface),
+          onSelected: (value) {
+            if (value == 'delete') {
+              _deletePlant();
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'delete',
+              child: Text('Borrar planta'),
+            ),
+          ],
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
           toBeginningOfSentenceCase(plant.name),
           style: TextStyle(
-              color: colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16.0),
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+            fontSize: 16.0,
+          ),
         ),
-        background: plant.imagePath != null ? Image.file(
-          File(plant.imagePath ?? IOHelpers.defaultPlaceholder),
-          fit: BoxFit.cover,
-          colorBlendMode: BlendMode.darken,
-          color: Colors.black.withValues(alpha: 0.4),
-        ): Image.asset(IOHelpers.getImagePlaceHolderString(),fit: BoxFit.cover,
-          colorBlendMode: BlendMode.darken,
-          color: Colors.black.withValues(alpha: 0.4),),
+        background:
+            plant.imagePath != null
+                ? Image.file(
+                  File(plant.imagePath ?? IOHelpers.defaultPlaceholder),
+                  fit: BoxFit.cover,
+                  colorBlendMode: BlendMode.darken,
+                  color: Colors.black.withValues(alpha: 0.4),
+                )
+                : Image.asset(
+                  IOHelpers.getImagePlaceHolderString(),
+                  fit: BoxFit.cover,
+                  colorBlendMode: BlendMode.darken,
+                  color: Colors.black.withValues(alpha: 0.4),
+                ),
       ),
     );
   }
@@ -99,25 +137,48 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(toBeginningOfSentenceCase(plant.name),
-                style: TextStyle(
-                    color: colorScheme.onSurface,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              toBeginningOfSentenceCase(plant.name),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(toBeginningOfSentenceCase(plant.species ?? 'Sin especie indicada'),
-                style: TextStyle(color: MyAppStyle.lightTextColorLight, fontSize: 16)),
+            Text(
+              toBeginningOfSentenceCase(
+                plant.species ?? 'Sin especie indicada',
+              ),
+              style: TextStyle(
+                color: MyAppStyle.lightTextColorLight,
+                fontSize: 16,
+              ),
+            ),
             const SizedBox(height: 24),
             _buildActionButtons(),
             const SizedBox(height: 32),
-            Text('Información de la planta',
-                style: TextStyle(
-                    color: colorScheme.onSurface,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              'Información de la planta',
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 16),
-            _InfoRow(label: 'Ubicación', value: plant.location ?? StringHelpers.NO_LOCATION_PLANT),
-            _InfoRow(label: 'Fecha de adquisición', value: StringHelpers.formatLocalDate(plant.acquisitionDate, context,format: 'dd/MM/yyyy')),
+            _InfoRow(
+              label: 'Ubicación',
+              value: plant.location ?? StringHelpers.NO_LOCATION_PLANT,
+            ),
+            _InfoRow(
+              label: 'Fecha de adquisición',
+              value: StringHelpers.formatLocalDate(
+                plant.acquisitionDate,
+                context,
+                format: 'dd/MM/yyyy',
+              ),
+            ),
             _InfoRow(label: 'Notas', value: plant.notes),
             /*_InfoRow(
                 label: 'Sunlight Needs', value: 'Partial, indirect sunlight'),
@@ -126,7 +187,6 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 value: 'Once a month, during spring\nand summer'),*/
             const SizedBox(height: 32),
             _buildEventsHeader(colorScheme),
-            const SizedBox(height: 16),
             //_buildSearchBar(),
             //const SizedBox(height: 16),
             _buildEventsList(colorScheme),
@@ -134,7 +194,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
             // --- SECCIÓN DE RECORDATORIOS ---
             _buildActiveRemindersHeader(colorScheme),
-            //const SizedBox(height: 16),
+            //const SizedBox(height: 8),
             _buildRemindersList(colorScheme),
           ],
         ),
@@ -143,24 +203,36 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 
   Widget _buildActionButtons() {
-
     return Row(
       children: [
         Expanded(
           child: _ActionButton(
             icon: Icons.edit,
             label: 'Editar Planta',
-            onTap: () async{
-              PlantResult? result = await Navigator.push<PlantResult>(context, MaterialPageRoute<PlantResult>(
-                builder: (context) => AddPlantScreen(updatePlant: plant,),
-              ));
+            onTap: () async {
+              PlantResult? result = await Navigator.push<PlantResult>(
+                context,
+                MaterialPageRoute<PlantResult>(
+                  builder: (context) => AddPlantScreen(updatePlant: plant),
+                ),
+              );
 
-              if(result !=null && result.updated){
-                Plant? freshPlant = await DatabaseHelper().getPlantById(plant.id!);
-                if(freshPlant != null){
+              if (result != null && result.updated) {
+                Plant? freshPlant = await DatabaseHelper().getPlantById(
+                  plant.id!,
+                );
+
+                if (freshPlant != null) {
                   setState(() {
+                    plantUpdated = true;
                     plant = freshPlant;
                   });
+                }
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('¡Planta actualizada con éxito!')),
+                  );
                 }
               }
             },
@@ -169,13 +241,16 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: _ActionButton(
-            icon: iconRegado ? Icons.water_drop:Icons.opacity,
-            label: iconRegado? 'Regado':'Regar',
+            icon: iconRegado ? Icons.water_drop : Icons.opacity,
+            label: iconRegado ? 'Regado' : 'Regar',
             onTap: () async {
-              if(iconRegado){
+              if (iconRegado) {
                 return;
               }
-              await DatabaseHelper().insertCareEvent(CareEvent.createNow(plant, TypeCareEvent.riego), plant.id!);
+              await DatabaseHelper().insertCareEvent(
+                CareEvent.createNow(plant, TypeCareEvent.riego),
+                plant.id!,
+              );
               _careEventsFuture = DatabaseHelper().getCareEvents(plant.id!);
               setState(() {
                 iconRegado = true;
@@ -196,27 +271,37 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('Eventos',
-            style: TextStyle(
-                color: colorScheme.onSurface,
-                fontSize: 20,
-                fontWeight: FontWeight.bold)),
+        Text(
+          'Eventos',
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         TextButton.icon(
-          onPressed:  () async {
-            bool? result = await Navigator.push<bool>(context, MaterialPageRoute<bool>(
-              builder: (context) => AddCareEventScreen(plant: plant),
-            ));
+          onPressed: () async {
+            bool? result = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute<bool>(
+                builder: (context) => AddCareEventScreen(plant: plant),
+              ),
+            );
             //se actualiza sin importar que el usuario cancele el agregado
-            if(result == null || result){
+            if (result == null || result) {
               setState(() {
                 _careEventsFuture = DatabaseHelper().getCareEvents(plant.id!);
               });
             }
           },
-          icon:  Icon(Icons.add, color: colorScheme.primary, size: 20),
-          label:  Text('Nuevo',
-              style:
-              TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold)),
+          icon: Icon(Icons.add, color: colorScheme.primary, size: 20),
+          label: Text(
+            'Nuevo',
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           style: TextButton.styleFrom(
             backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
             shape: RoundedRectangleBorder(
@@ -233,7 +318,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-         Text(
+        Text(
           'Recordatorios Activos',
           style: TextStyle(
             color: colorScheme.onSurface,
@@ -243,20 +328,26 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         ),
         TextButton.icon(
           onPressed: () async {
-            bool? result = await Navigator.push<bool>(context, MaterialPageRoute<bool>(
-              builder: (context) => AddReminderScreen(plant: plant),
-            ));
+            bool? result = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute<bool>(
+                builder: (context) => AddReminderScreen(plant: plant),
+              ),
+            );
             //se actualiza sin importar que el usuario cancele el agregado
-            if(result == null || result){
+            if (result == null || result) {
               setState(() {
                 _remindersFuture = DatabaseHelper().getReminders(plant.id!);
               });
             }
           },
-          icon:  Icon(Icons.add, color: colorScheme.primary, size: 20),
-          label:  Text(
+          icon: Icon(Icons.add, color: colorScheme.primary, size: 20),
+          label: Text(
             'Nuevo',
-            style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           style: TextButton.styleFrom(
             backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
@@ -281,7 +372,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
         // ESTADO 2: Ocurrió un error
         if (snapshot.hasError) {
-          return Center(child: Text('Error al cargar los recordatorios: ${snapshot.error}'));
+          return Center(
+            child: Text('Error al cargar los recordatorios: ${snapshot.error}'),
+          );
         }
 
         // ESTADO 3: Datos cargados, pero la lista está vacía
@@ -299,7 +392,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
         // ESTADO 4: Datos cargados exitosamente
         loadedReminders = snapshot.data!;
-        
+
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -317,14 +410,13 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-
   Widget _buildSearchBar(ColorScheme colorScheme) {
     return TextField(
-      style:  TextStyle(color: colorScheme.onSurface),
+      style: TextStyle(color: colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: 'Buscar',
-        hintStyle:  TextStyle(color: colorScheme.inversePrimary),
-        prefixIcon:  Icon(Icons.search, color: colorScheme.inversePrimary),
+        hintStyle: TextStyle(color: colorScheme.inversePrimary),
+        prefixIcon: Icon(Icons.search, color: colorScheme.inversePrimary),
         filled: true,
         //fillColor: surfaceColor,
         border: OutlineInputBorder(
@@ -346,7 +438,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
         // ESTADO 2: Ocurrió un error
         if (snapshot.hasError) {
-          return Center(child: Text('Error al cargar los eventos: ${snapshot.error}'));
+          return Center(
+            child: Text('Error al cargar los eventos: ${snapshot.error}'),
+          );
         }
 
         // ESTADO 3: Datos cargados, pero la lista está vacía
@@ -355,9 +449,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 20.0),
               child: Text(
-              'No hay eventos registrados.',
-              style: TextStyle(color: colorScheme.onSurface, fontSize: 16),
-            ),
+                'No hay eventos registrados.',
+                style: TextStyle(color: colorScheme.onSurface, fontSize: 16),
+              ),
             ),
           );
         }
@@ -368,7 +462,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         return ListView.builder(
           itemCount: events.length,
           shrinkWrap: true, // Importante dentro de un CustomScrollView
-          physics: const NeverScrollableScrollPhysics(), // Para evitar scroll anidado
+          physics:
+              const NeverScrollableScrollPhysics(), // Para evitar scroll anidado
           itemBuilder: (context, index) {
             final event = events[index];
             // Pasamos el objeto completo al widget _ScheduleTile refactorizado
@@ -378,7 +473,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       },
     );
   }
+
 }
+
 class _ScheduleTile extends StatelessWidget {
   final CareEvent event;
 
@@ -390,23 +487,31 @@ class _ScheduleTile extends StatelessWidget {
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-      leading: Icon(_getEventTypeIcon(event.type), color: colorScheme.primary), // Opcional: un icono
+      leading: Icon(
+        _getEventTypeIcon(event.type),
+        color: colorScheme.primary,
+      ), // Opcional: un icono
       title: Text(
         'Evento: ${event.type.normalName}',
         style: TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5),
+          color: colorScheme.onSurface,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
       ),
       subtitle: Text(
         StringHelpers.formatLocalDate(event.date, context),
         style: TextStyle(
-            color: colorScheme.onSurface.withValues(alpha: 0.7),
-            fontSize: 16,
-            fontWeight: FontWeight.w500),
+          color: colorScheme.onSurface.withValues(alpha: 0.7),
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
       ),
-      trailing: Icon(Icons.chevron_right, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: colorScheme.onSurface.withValues(alpha: 0.5),
+      ),
       onTap: () {
         // Aquí puedes navegar a una pantalla de detalle del evento si lo deseas
         // Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)));
@@ -438,7 +543,7 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    if(value == null){
+    if (value == null) {
       return SizedBox.shrink();
     }
     return Padding(
@@ -447,13 +552,17 @@ class _InfoRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style:  TextStyle(color: colorScheme.onSurface, fontSize: 15)),
+          Text(
+            label,
+            style: TextStyle(color: colorScheme.onSurface, fontSize: 15),
+          ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(value!,
-                textAlign: TextAlign.end,
-                style:  TextStyle(color: colorScheme.onSurface, fontSize: 15)),
+            child: Text(
+              value!,
+              textAlign: TextAlign.end,
+              style: TextStyle(color: colorScheme.onSurface, fontSize: 15),
+            ),
           ),
         ],
       ),
@@ -465,8 +574,11 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _ActionButton(
-      {required this.icon, required this.label, required this.onTap});
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -484,11 +596,14 @@ class _ActionButton extends StatelessWidget {
             children: [
               Icon(icon, color: colorScheme.primary),
               const SizedBox(width: 8),
-              Text(label,
-                  style:  TextStyle(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15)),
+              Text(
+                label,
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
             ],
           ),
         ),
@@ -521,9 +636,9 @@ class _ReminderCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildReminderRow('Recuérdame:', reminderText,context),
+          _buildReminderRow('Recuérdame:', reminderText, context),
           const SizedBox(height: 8),
-          _buildReminderRow('Frecuencia:', '$frequencyDays días',context),
+          _buildReminderRow('Frecuencia:', '$frequencyDays días', context),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
@@ -540,17 +655,24 @@ class _ReminderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildReminderRow(String label, String value,BuildContext context) {
+  Widget _buildReminderRow(String label, String value, BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style:  TextStyle(color: colorScheme.onSurface, fontSize: 15)),
+        Text(
+          label,
+          style: TextStyle(color: colorScheme.onSurface, fontSize: 15),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
-            style:  TextStyle(color: colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],

@@ -1,12 +1,11 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:myapp/data/database_helper.dart';
 import 'package:myapp/data/plant.dart';
-import 'package:myapp/screens/old_plant_detail_screen.dart';
 import 'package:myapp/screens/detail_plant_screen.dart';
 
 import '../helpers/io_helpers.dart';
+import 'add_plant_screen.dart';
 
 class PlantListScreen extends StatefulWidget {
   const PlantListScreen({super.key});
@@ -48,7 +47,7 @@ class _PlantListScreenState extends State<PlantListScreen> {
                   Plant plant = plants[index];
                   return Padding(
                     padding: const EdgeInsets.only(top: 5,bottom: 5,right: 15,left: 15),
-                    child: CardPlant(plant: plant),
+                    child: cardPlant(plant),
                   );
                 },
               ),
@@ -58,33 +57,31 @@ class _PlantListScreenState extends State<PlantListScreen> {
       ),
     );
   }
-}
 
-class CardPlant extends StatelessWidget {
-  final Plant plant;
-  const CardPlant({super.key, required this.plant});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget cardPlant(Plant plant){
     return SizedBox(
       height: 100,
       child:
-        Card(
-          //color: Theme.of(context).colorScheme.onSurface.withValues(a),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PlantDetailScreen(plant: plant),
-                ),
-              );
-            },
-            leading: IOHelpers.getAvatar(plant.imagePath),
-            title: Text(plant.name,style: TextTheme.of(context).headlineSmall,),
-          ),
+      Card(
+        //color: Theme.of(context).colorScheme.onSurface.withValues(a),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+          onTap: () async {
+            PlantResult? result = await Navigator.push<PlantResult>(context, MaterialPageRoute<PlantResult>(
+              builder: (context) => PlantDetailScreen(plant: plant),
+            ));
+            if(result !=null && result.updated){
+                debugPrint('update list');
+                setState(() {
+                  _plantsFuture = DatabaseHelper().getPlants();
+                });
+            }
+          },
+          leading: IOHelpers.getAvatar(plant.imagePath),
+          title: Text(plant.name,style: TextTheme.of(context).headlineSmall,),
         ),
+      ),
     );
   }
+
 }

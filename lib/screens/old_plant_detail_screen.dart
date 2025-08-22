@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/data/database_helper.dart';
 import 'package:myapp/data/care_event.dart';
@@ -9,7 +8,6 @@ import 'package:myapp/data/plant.dart';
 import 'package:myapp/data/reminder.dart';
 import 'package:myapp/screens/add_care_event_screen.dart';
 import 'package:myapp/screens/add_reminder_screen.dart';
-import 'package:myapp/screens/plant_list_screen.dart';
 
 import '../main.dart';
 

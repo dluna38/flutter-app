@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
-import 'package:myapp/helpers/notification_helper.dart';
 import '../data/care_event.dart';
 import '../data/plant.dart';
 import '../data/database_helper.dart';
 import '../data/reminder.dart';
-import '../helpers/notification_helper.dart';
 import '../helpers/string_helpers.dart';
 
 class AddReminderScreen extends StatefulWidget {
@@ -21,17 +18,20 @@ class AddReminderScreen extends StatefulWidget {
 class _AddReminderScreenState extends State<AddReminderScreen> {
   late Plant plant;
   late ColorScheme colorScheme;
+  final TextEditingController _taskController = TextEditingController();
+  final TextEditingController _daysController = TextEditingController();
+  TimeOfDay _selectedTime = TimeOfDay(hour: 9, minute: 0);
+  TypeCareEvent? _selectedTypeEvent;
+  DateTime _selectedDate = DateTime.now().add(Duration(days: 1));
+  bool showNextDueText = false;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     plant = widget.plant;
+    _daysController.text = "1";
   }
-
-  final TextEditingController _taskController = TextEditingController();
-  final TextEditingController _daysController = TextEditingController();
-  TimeOfDay _selectedTime = TimeOfDay(hour: 9, minute: 0);
-  TypeCareEvent? _selectedTypeEvent;
 
   Future<void> _selectTime(BuildContext context) async {
     TimeOfDay? pickedTime = await showTimePicker(
@@ -47,24 +47,77 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     }
   }
 
-  void _saveReminder(BuildContext context) async {
-    // Valida que el campo de tarea no esté vacío
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: _selectedDate,
+    );
+    if (picked != null && picked != _selectedDate) {
+      debugPrint('Guardar: $picked');
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  void showNextDue() {
+    debugPrint('showNextDue');
+    if (_taskController.text.isEmpty || _daysController.text.isEmpty) {
+      return;
+    }
+    setState(() {
+      showNextDueText = true;
+    });
+  }
+
+  void showAlertDialogSave(BuildContext context){
     if (_taskController.text.trim().isEmpty) {
-      // Muestra un mensaje al usuario si el campo está vacío
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, ingresa qué recordar.')),
       );
       return;
     }
-
     int? days = int.tryParse(_daysController.text);
     if (days == null || days < 1) {
       // Muestra un mensaje al usuario si los días no son válidos
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, ingresa un número válido de días.')),
+        const SnackBar(
+          content: Text('Por favor, ingresa un número válido de días.'),
+        ),
       );
       return;
     }
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Creación de recordatorio"),
+          content: Text(
+            "El recordatorio de: ${_taskController.text} iniciara el ${DateFormat('dd/MM/yyyy').format(_selectedDate)} a las ${_selectedTime.format(context)} y se repetirá cada ${_daysController.text} ${_daysController.text =="1"?'dia':'dias'}",
+            style: TextStyle(
+              fontSize: 16
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () {
+                _saveReminder(context);
+              },
+              child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  void _saveReminder(BuildContext context) async {
+    int? days = int.tryParse(_daysController.text);
     DateTime now = DateTime.now();
     DateTime nextDue = DateTime(
       now.year,
@@ -72,7 +125,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       now.day,
       _selectedTime.hour,
       _selectedTime.minute,
-    ).add(Duration(days: days));
+    ).add(Duration(days: days!));
     //DateTime nextDue = now.add(Duration(minutes: 16));
 
     Reminder reminder = Reminder(
@@ -142,15 +195,18 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                 ),
               ],
               emptySelectionAllowed: true,
-              selected: _selectedTypeEvent != null ? <TypeCareEvent>{_selectedTypeEvent!} : <TypeCareEvent>{},
+              selected:
+                  _selectedTypeEvent != null
+                      ? <TypeCareEvent>{_selectedTypeEvent!}
+                      : <TypeCareEvent>{},
               onSelectionChanged: (Set<TypeCareEvent> newSelection) {
                 setState(() {
                   if (newSelection.isEmpty) {
-                    _selectedTypeEvent = null; // No hay selección
-                    _taskController.text = ''; // Borra el texto del TextField
+                    _selectedTypeEvent = null;
+                    _taskController.text = '';
                   } else {
-                    _selectedTypeEvent = newSelection.first; // Establece la nueva selección
-                    // Actualiza el texto del TextField según la selección
+                    _selectedTypeEvent = newSelection.first;
+
                     _taskController.text = _selectedTypeEvent!.normalName;
                   }
                 });
@@ -160,13 +216,29 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               controller: _taskController,
               decoration: const InputDecoration(labelText: 'Que recordar?'),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 15),
+            Row(
+              children: [
+                Text(
+                  'Fecha de inicio: ${DateFormat('dd-MM-yyyy').format(_selectedDate)}',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
             TextField(
               keyboardType: TextInputType.number,
               controller: _daysController,
               decoration: const InputDecoration(
-                labelText: 'A partir de hoy, cada tantos dias',
+                labelText: 'Repetir cada tantos dias:',
               ),
+              onChanged: (event) {
+                showNextDue();
+              },
             ),
             const SizedBox(height: 20),
             Row(
@@ -181,7 +253,6 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: 20),
             const Spacer(),
             // Botón para guardar
@@ -189,7 +260,8 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  _saveReminder(context);
+                  showAlertDialogSave(context);
+                 // _saveReminder(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
@@ -199,7 +271,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                   ),
                 ),
                 child: const Text(
-                  'Save Reminder',
+                  'Guardar recordatorio',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -208,7 +280,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
           ],
         ),
       ),

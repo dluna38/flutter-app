@@ -101,7 +101,7 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
                 ),
               ],
             ),
-            Text('Tipo'),
+            const Text('Tipo'),
             SegmentedButton<TypeCareEvent>(
               segments: const <ButtonSegment<TypeCareEvent>>[
                 ButtonSegment<TypeCareEvent>(

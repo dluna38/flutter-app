@@ -6,7 +6,6 @@ import 'package:myapp/data/plant.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:myapp/helpers/string_helpers.dart';
 
-import '../main.dart';
 
 class AddPlantScreen extends StatelessWidget {
   final Plant? updatePlant;
@@ -15,24 +14,32 @@ class AddPlantScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${updatePlant == null ? 'Agregar' : 'Editar'} planta'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () {
-            Navigator.pop(context, PlantResult());
-          },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && context.mounted) {
+          Navigator.pop(context, PlantResult());
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('${updatePlant == null ? 'Agregar' : 'Editar'} planta'),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+            onPressed: () {
+              Navigator.pop(context, PlantResult());
+            },
+          ),
+          backgroundColor: colorScheme.surface,
         ),
-        backgroundColor: colorScheme.surface,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [FormPlant(updatePlant: updatePlant)],
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [FormPlant(updatePlant: updatePlant)],
+            ),
           ),
         ),
       ),
@@ -75,6 +82,8 @@ class _FormPlantState extends State<FormPlant> {
       _notesController.text = oldPlant!.notes ?? "";
       _selectedDate = oldPlant!.acquisitionDate;
       _imagePath = oldPlant!.imagePath;
+    }else{
+      oldPlant = null;
     }
   }
 
@@ -215,7 +224,7 @@ class _FormPlantState extends State<FormPlant> {
                   ),
                 ],
               ),
-          SizedBox(height: 25),
+          const SizedBox(height: 25),
           TextFormField(
             controller: _nameController,
             decoration: InputDecoration(

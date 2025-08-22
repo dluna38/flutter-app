@@ -18,6 +18,8 @@ void main() {
 
   NotificationHelper.initNotifications();
   Workmanager().initialize(callbackDispatcher);
+
+  Workmanager().cancelByUniqueName('schedule-reminder');
   Workmanager().registerPeriodicTask(
     'schedule-reminder',
     'task-schedule-reminder',
@@ -48,8 +50,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  Key _plantListKey = UniqueKey();
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +70,25 @@ class HomeScreen extends StatelessWidget {
         title:  Text("Mis Plantas",style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
       ),
       floatingActionButton: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          PlantResult? result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddPlantScreen()),
           );
+
+          // Si el resultado indica que se añadió o actualizó una planta
+          if (result != null && result.created) {
+            debugPrint('Se creo una planta');
+            setState(() {
+              _plantListKey = UniqueKey();
+            });
+
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('¡Planta agregada con éxito!')),
+              );
+            }
+          }
         },
         child: Text('+'),
       ),
@@ -78,17 +102,8 @@ class HomeScreen extends StatelessWidget {
           },
           child: Text('Logs'),
         ),
-        /*ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => (TestAddReminderScreen())),
-            );
-          },
-          child: Text('TEST S'),
-        ),*/
       ],
-      body: PlantListScreen(),
+      body: PlantListScreen(key: _plantListKey,),
     );
   }
 }
@@ -105,7 +120,6 @@ class _NavBarMainState extends State<NavBarMain> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
     return Scaffold(
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
@@ -130,7 +144,7 @@ class _NavBarMainState extends State<NavBarMain> {
       ),
       body:
           <Widget>[
-            HomeScreen(),
+            const HomeScreen(),
             PendingNotificationsScreen(),
             GridView.count(
               // Create a grid with 2 columns.
@@ -159,7 +173,7 @@ class CardPlant1 extends StatelessWidget {
         onTap: () {
           debugPrint('Card tapped.');
         },
-        leading: CircleAvatar(child: Icon(Icons.eco_rounded)),
+        leading: const CircleAvatar(child: Icon(Icons.eco_rounded)),
         title: Text('Item $index', style: TextTheme.of(context).headlineSmall),
       ),
     );

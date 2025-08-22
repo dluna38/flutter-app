@@ -1,7 +1,5 @@
-import 'dart:ffi';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
 import 'package:myapp/helpers/io_helpers.dart';
 import 'package:sqflite/sqflite.dart';
@@ -170,7 +168,7 @@ class DatabaseHelper {
 
   void deletePlant(int id) async {
     Database db = await database;
-    int result = await db.delete(_PLANT_TABLE, where: 'id=?', whereArgs: [id]);
+    await db.delete(_PLANT_TABLE, where: 'id=?', whereArgs: [id]);
     //return result
   }
 
@@ -201,43 +199,6 @@ class DatabaseHelper {
       return CareEvent.fromMap(maps[i]);
     });
   }
-
-  //REMINDERS
-  Future<void> checkReminders([List<Plant>? plants]) async {
-    Database db = await database;
-    final List<Map<String, dynamic>> remindersMap = await db.query('reminders');
-    List<Reminder> reminders = List.generate(remindersMap.length, (i) {
-      return Reminder(
-        id: remindersMap[i]['id'],
-        plantId: remindersMap[i]['plantId'],
-        task: remindersMap[i]['task'],
-        frequencyDays: remindersMap[i]['frequency'],
-        nextDue: DateTime.parse(remindersMap[i]['nextDue']),
-        active: remindersMap[i]['active'],
-      );
-    });
-    List<Plant> allPlants = plants ?? await getPlants();
-    for (var reminder in reminders) {
-      if (reminder.nextDue.isBefore(DateTime.now())) {
-        Plant plant = allPlants.firstWhere(
-          (element) => element.id == reminder.plantId,
-        );
-        /*await _flutterLocalNotificationsPlugin.show(
-          reminder.id! as int,
-          'Reminder Due',
-          '${reminder.task} - ${plant.name}',
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              'channel_id',
-              'channel_name',
-              importance: Importance.high,
-            ),
-          ),
-        );*/
-      }
-    }
-  }
-
 
   Future<int> insertReminder(Reminder reminder) async {
     try {
