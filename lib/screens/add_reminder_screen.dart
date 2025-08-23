@@ -72,7 +72,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     });
   }
 
-  void showAlertDialogSave(BuildContext context){
+  void showAlertDialogSave(BuildContext context) {
     if (_taskController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, ingresa qué recordar.')),
@@ -95,10 +95,8 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
         return AlertDialog(
           title: const Text("Creación de recordatorio"),
           content: Text(
-            "El recordatorio de: ${_taskController.text} iniciara el ${DateFormat('dd/MM/yyyy').format(_selectedDate)} a las ${_selectedTime.format(context)} y se repetirá cada ${_daysController.text} ${_daysController.text =="1"?'dia':'dias'}",
-            style: TextStyle(
-              fontSize: 16
-            ),
+            "El recordatorio de: ${_taskController.text} iniciara el ${DateFormat('dd/MM/yyyy').format(_selectedDate)} a las ${_selectedTime.format(context)} y se repetirá cada ${_daysController.text} ${_daysController.text == "1" ? 'dia' : 'dias'}",
+            style: TextStyle(fontSize: 16),
           ),
           actions: [
             TextButton(
@@ -107,6 +105,9 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
             ),
             TextButton(
               onPressed: () {
+                if (context.mounted) {
+                  Navigator.pop(context, true);
+                }
                 _saveReminder(context);
               },
               child: const Text("Guardar"),
@@ -116,6 +117,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
       },
     );
   }
+
   void _saveReminder(BuildContext context) async {
     int? days = int.tryParse(_daysController.text);
     DateTime now = DateTime.now();
@@ -261,7 +263,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   showAlertDialogSave(context);
-                 // _saveReminder(context);
+                  // _saveReminder(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,

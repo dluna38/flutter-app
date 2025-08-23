@@ -185,14 +185,50 @@ class DatabaseHelper {
   }
   deleteCareEvent(int id) {}
 
-  Future<List<CareEvent>> getCareEvents(int plantId) async{
+  Future<List<CareEvent>> getCareEvents(int plantId, {Map<String, String> filters = const {}}) async {
     Database db = await database;
+
+    // Cláusulas WHERE y argumentos para construir la consulta
+    final List<String> whereClauses = ['plantId = ?'];
+    final List<dynamic> whereArgs = [plantId];
+
+    // Extrae y valida los filtros restantes
+    final String orderBy = filters['orderBy'] ?? 'date DESC';
+    final int? limit = int.tryParse(filters['limit'] ?? '');
+
+    // Filtro por tipo de evento
+    if (filters.containsKey('type') && int.tryParse(filters['type']!) != null) {
+
+      whereClauses.add('type = ?');
+      whereArgs.add(filters['type']);
+    }
+
+    // Filtro por fecha de inicio (si existe)
+    if (filters.containsKey('startDate')) {
+      final startDate = DateTime.tryParse(filters['startDate']!)?.millisecondsSinceEpoch;
+      if (startDate != null) {
+        whereClauses.add('date >= ?');
+        whereArgs.add(startDate);
+      }
+    }
+
+    // Filtro por fecha de fin (si existe)
+    if (filters.containsKey('endDate')) {
+      final endDate = DateTime.tryParse(filters['endDate']!)?.millisecondsSinceEpoch;
+      if (endDate != null) {
+        whereClauses.add('date <= ?');
+        whereArgs.add(endDate);
+      }
+    }
+
+    final String whereString = whereClauses.join(' AND ');
 
     final List<Map<String, dynamic>> maps = await db.query(
       _CARE_EVENTS_TABLE,
-      where: 'plantId=?',
-      whereArgs: [plantId],
-      orderBy: 'date DESC',
+      where: whereString,
+      whereArgs: whereArgs,
+      orderBy: orderBy,
+      limit: limit,
     );
 
     return List.generate(maps.length, (i) {

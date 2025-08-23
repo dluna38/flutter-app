@@ -13,6 +13,7 @@ import 'package:myapp/screens/add_plant_screen.dart';
 
 import 'add_care_event_screen.dart';
 import 'add_reminder_screen.dart';
+import 'full_care_event_list_screen.dart';
 // Definimos los colores para reutilizarlos fácilmente
 
 class PlantDetailScreen extends StatefulWidget {
@@ -34,14 +35,21 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   void initState() {
     super.initState();
     plant = widget.plant;
-    _careEventsFuture = DatabaseHelper().getCareEvents(plant.id!);
+    updateCareEventsDataset();
     _remindersFuture = DatabaseHelper().getReminders(plant.id!);
+  }
+
+  void updateCareEventsDataset() {
+    _careEventsFuture = DatabaseHelper().getCareEvents(
+      plant.id!,
+      filters: {"limit": "5"},
+    );
   }
 
   void _removeReminder(int index) {
     Reminder reminder = loadedReminders[index];
     reminder.delete();
-    _remindersFuture = DatabaseHelper().getReminders(plant.id!);
+    //_remindersFuture = DatabaseHelper().getReminders(plant.id!);
     setState(() {
       loadedReminders.removeAt(index);
     });
@@ -94,12 +102,13 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               _deletePlant();
             }
           },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'delete',
-              child: Text('Borrar planta'),
-            ),
-          ],
+          itemBuilder:
+              (context) => [
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Borrar planta'),
+                ),
+              ],
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -231,7 +240,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('¡Planta actualizada con éxito!')),
+                    const SnackBar(
+                      content: Text('¡Planta actualizada con éxito!'),
+                    ),
                   );
                 }
               }
@@ -251,7 +262,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 CareEvent.createNow(plant, TypeCareEvent.riego),
                 plant.id!,
               );
-              _careEventsFuture = DatabaseHelper().getCareEvents(plant.id!);
+              updateCareEventsDataset();
               setState(() {
                 iconRegado = true;
               });
@@ -290,7 +301,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             //se actualiza sin importar que el usuario cancele el agregado
             if (result == null || result) {
               setState(() {
-                _careEventsFuture = DatabaseHelper().getCareEvents(plant.id!);
+                updateCareEventsDataset();
               });
             }
           },
@@ -310,6 +321,73 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEventsList(ColorScheme colorScheme) {
+    return FutureBuilder<List<CareEvent>>(
+      future: _careEventsFuture, // El Future que creamos en initState
+      builder: (context, snapshot) {
+        // ESTADO 1: Cargando los datos
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // ESTADO 2: Ocurrió un error
+        if (snapshot.hasError) {
+          return Center(
+            child: Text('Error al cargar los eventos: ${snapshot.error}'),
+          );
+        }
+
+        // ESTADO 3: Datos cargados, pero la lista está vacía
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20.0),
+              child: Text(
+                'No hay eventos registrados.',
+                style: TextStyle(color: colorScheme.onSurface, fontSize: 16),
+              ),
+            ),
+          );
+        }
+
+        // ESTADO 4: Datos cargados exitosamente
+        final events = snapshot.data!;
+
+        return Column(
+          children: [
+            ListView.builder(
+              itemCount: events.length,
+              shrinkWrap: true,
+              physics:
+                  const NeverScrollableScrollPhysics(), // Para evitar scroll anidado
+              itemBuilder: (context, index) {
+                return ScheduleTile(event: events[index]);
+              },
+            ),
+            if (events.length == 5)
+              Align(
+                alignment: Alignment.centerRight,
+                child: _ActionButton(
+                  icon: null,
+                  label: 'Ver más',
+                  onTap:
+                      () => {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => CareEventsScreen(plant: plant),
+                          ),
+                        ),
+                      },
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -334,8 +412,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 builder: (context) => AddReminderScreen(plant: plant),
               ),
             );
-            //se actualiza sin importar que el usuario cancele el agregado
-            if (result == null || result) {
+
+            if (result != null && result) {
               setState(() {
                 _remindersFuture = DatabaseHelper().getReminders(plant.id!);
               });
@@ -402,7 +480,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             return _ReminderCard(
               reminderText: reminder.task,
               frequencyDays: '${reminder.frequencyDays}',
-              onCancel: () => _removeReminder(index),
+              onCancel:
+                  () => _showDeleteReminderConfirmationDialog(context, index),
             );
           },
         );
@@ -410,76 +489,38 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-  Widget _buildSearchBar(ColorScheme colorScheme) {
-    return TextField(
-      style: TextStyle(color: colorScheme.onSurface),
-      decoration: InputDecoration(
-        hintText: 'Buscar',
-        hintStyle: TextStyle(color: colorScheme.inversePrimary),
-        prefixIcon: Icon(Icons.search, color: colorScheme.inversePrimary),
-        filled: true,
-        //fillColor: surfaceColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEventsList(ColorScheme colorScheme) {
-    return FutureBuilder<List<CareEvent>>(
-      future: _careEventsFuture, // El Future que creamos en initState
-      builder: (context, snapshot) {
-        // ESTADO 1: Cargando los datos
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        // ESTADO 2: Ocurrió un error
-        if (snapshot.hasError) {
-          return Center(
-            child: Text('Error al cargar los eventos: ${snapshot.error}'),
-          );
-        }
-
-        // ESTADO 3: Datos cargados, pero la lista está vacía
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20.0),
-              child: Text(
-                'No hay eventos registrados.',
-                style: TextStyle(color: colorScheme.onSurface, fontSize: 16),
-              ),
+  void _showDeleteReminderConfirmationDialog(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Borrar Recordatorio"),
+          content: const Text("¿Estás seguro de eliminar el recordatorio?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancelar"),
             ),
-          );
-        }
-
-        // ESTADO 4: Datos cargados exitosamente
-        final events = snapshot.data!;
-        // Usamos ListView.builder para construir la lista dinámicamente
-        return ListView.builder(
-          itemCount: events.length,
-          shrinkWrap: true, // Importante dentro de un CustomScrollView
-          physics:
-              const NeverScrollableScrollPhysics(), // Para evitar scroll anidado
-          itemBuilder: (context, index) {
-            final event = events[index];
-            // Pasamos el objeto completo al widget _ScheduleTile refactorizado
-            return _ScheduleTile(event: event);
-          },
+            TextButton(
+              onPressed: () async {
+                _removeReminder(index);
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text("Borrar"),
+            ),
+          ],
         );
       },
     );
   }
-
 }
 
-class _ScheduleTile extends StatelessWidget {
+class ScheduleTile extends StatelessWidget {
   final CareEvent event;
 
-  const _ScheduleTile({required this.event});
+  const ScheduleTile({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
@@ -508,14 +549,10 @@ class _ScheduleTile extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
       ),
-      trailing: Icon(
+      /*trailing: Icon(
         Icons.chevron_right,
         color: colorScheme.onSurface.withValues(alpha: 0.5),
-      ),
-      onTap: () {
-        // Aquí puedes navegar a una pantalla de detalle del evento si lo deseas
-        // Navigator.push(context, MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)));
-      },
+      ),*/
     );
   }
 
@@ -571,11 +608,11 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _ActionButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
   final String label;
   final VoidCallback onTap;
   const _ActionButton({
-    required this.icon,
+    this.icon,
     required this.label,
     required this.onTap,
   });
@@ -594,7 +631,7 @@ class _ActionButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: colorScheme.primary),
+              if(icon != null) Icon(icon, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 label,

@@ -49,6 +49,12 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
       context: context,
       initialEntryMode: TimePickerEntryMode.dial,
       initialTime: TimeOfDay.now(),
+      /*builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+          child: child!,
+        );
+      },*/
     );
     if (pickedTime != null && pickedTime != _selectedTime) {
       debugPrint('Guardar: $pickedTime');
@@ -68,7 +74,7 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () {
-            Navigator.pop(context,false);
+            Navigator.pop(context, false);
           },
         ),
       ),
@@ -144,19 +150,19 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   final newCareEvent = CareEvent(
-                      date: DateTime(
-                        _selectedDate.year,
-                        _selectedDate.month,
-                        _selectedDate.day,
-                        _selectedTime.hour,
-                        _selectedTime.minute,
-                      ),
-                      type: selectedTypeEvent,
-                      notes:
-                      _notesController.text.isEmpty
-                          ? null
-                          : _notesController.text,
-                      plant: plant
+                    date: DateTime(
+                      _selectedDate.year,
+                      _selectedDate.month,
+                      _selectedDate.day,
+                      _selectedTime.hour,
+                      _selectedTime.minute,
+                    ),
+                    type: selectedTypeEvent,
+                    notes:
+                        _notesController.text.isEmpty
+                            ? null
+                            : _notesController.text,
+                    plant: plant,
                   );
                   debugPrint('new event $newCareEvent');
                   await DatabaseHelper().insertCareEvent(
@@ -164,7 +170,7 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
                     widget.plant.id!,
                   );
                   if (context.mounted) {
-                    Navigator.pop(context,true);
+                    Navigator.pop(context, true);
                   }
                 },
                 style: ElevatedButton.styleFrom(

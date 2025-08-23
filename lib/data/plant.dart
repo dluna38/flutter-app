@@ -45,7 +45,7 @@ class Plant {
       name: map['name'] as String,
       species: map['species'] as String,
       location: map['location'] as String,
-      notes: map['notes'] as String,
+      notes: map['notes'] as String?,
       imagePath: map['imagePath'] as String?,
     );
     if(map['acquisitionDate'] != null){

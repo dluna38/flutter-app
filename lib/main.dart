@@ -5,7 +5,7 @@ import 'package:myapp/helpers/my_app_style.dart';
 import 'package:myapp/helpers/string_helpers.dart';
 import 'package:myapp/screens/debug_notis.dart';
 import 'package:myapp/screens/logs_list_screen.dart';
-
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'data/database_helper.dart';
@@ -25,6 +25,7 @@ void main() {
     'task-schedule-reminder',
     frequency: Duration(hours: 24),
     initialDelay: Duration(seconds: 10),
+    existingWorkPolicy: ExistingWorkPolicy.replace
   );
   initializeDateFormatting();
   runApp(const MyApp());
@@ -46,6 +47,14 @@ class MyApp extends StatelessWidget {
         '/add_plant': (context) => const AddPlantScreen(),
         '/plant_list': (context) => const PlantListScreen(),
       },
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: <Locale>[
+        const Locale('es','US'),
+      ],
+      locale: Locale('es','US'),
     );
   }
 }

@@ -52,37 +52,6 @@ class OldPlantDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showDeleteReminderConfirmationDialog(
-    BuildContext context,
-    Reminder reminder,
-  ) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Delete Reminder"),
-          content: const Text("Are you sure you want to delete this reminder?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () async {
-                await DatabaseHelper().deleteReminder(reminder.id!);
-                //refresh the list of reminders
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text("Delete"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _showDeleteConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
