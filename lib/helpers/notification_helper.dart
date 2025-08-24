@@ -1,8 +1,17 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:myapp/data/plant.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+
+import '../data/database_helper.dart';
+import '../screens/detail_plant_screen.dart';
+import 'package:myapp/main.dart';
+
 
 class NotificationHelper {
 
@@ -36,6 +45,7 @@ class NotificationHelper {
     required String title,
     required String body,
     required DateTime startTime,
+    String? payload
   }) async {
     initTimezones();
     await _notificationsPlugin.zonedSchedule(
@@ -53,22 +63,41 @@ class NotificationHelper {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-
-
+      payload: payload
     );
   }
 
   static Future<void> cancelReminder(int id) async {
     await _notificationsPlugin.cancel(id);
   }
-  static void onDidReceiveNotificationResponse(
+  static void onDidReceiveNotificationResponse (
       NotificationResponse notificationResponse,
-      ) {
-    debugPrint('noti response : ${notificationResponse.payload}');
+      ) async{
+    if(notificationResponse.payload !=null){
+      Map<String, dynamic> data = json.decode(notificationResponse.payload!);
+
+      if(data.containsKey('type') && data['type'].toString() == 'care-event'){
+        Plant? plant = await DatabaseHelper().getPlantById(data['plantId']);
+        if(plant ==null){
+          return;
+        }
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (context) => PlantDetailScreen(plant: plant,),
+          ),
+        );
+      }
+    }
+
+    DatabaseHelper().insertLog('noti response : ${notificationResponse.payload}');
   }
 
   static Future<List<PendingNotificationRequest>> getNotis() async{
     return await _notificationsPlugin.pendingNotificationRequests();
   }
 
+  static String createPayload(Map<String, dynamic> notificationPayload){
+    return json.encode(notificationPayload);
+  }
 }
+

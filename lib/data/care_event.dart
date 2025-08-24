@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:myapp/data/plant.dart';
 
 class CareEvent {
@@ -48,11 +49,12 @@ class CareEvent {
 }
 
 enum TypeCareEvent {
-  riego(normalName: 'Riego'),
-  fertilizante(normalName: 'Fertilizante'),
-  poda(normalName: 'Poda'),
-  cambioAbono(normalName: 'Cambio abono');
+  riego(normalName: 'Riego',icon: Icons.water_drop),
+  fertilizante(normalName: 'Fertilizante',icon: Icons.grain),
+  poda(normalName: 'Poda',icon: Icons.cut),
+  cambioAbono(normalName: 'Cambio abono',icon: Icons.compost);
 
   final String normalName;
-  const TypeCareEvent({required this.normalName});
+  final IconData icon;
+  const TypeCareEvent({required this.normalName, required this.icon});
 }

@@ -13,13 +13,18 @@ import 'helpers/notification_helper.dart';
 import 'screens/add_plant_screen.dart';
 import 'screens/plant_list_screen.dart';
 
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   NotificationHelper.initNotifications();
   Workmanager().initialize(callbackDispatcher);
 
-  Workmanager().cancelByUniqueName('schedule-reminder');
+  Workmanager().cancelAll();
   Workmanager().registerPeriodicTask(
     'schedule-reminder',
     'task-schedule-reminder',
@@ -38,6 +43,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'PlantApp',
       theme: MyAppStyle.lightTheme,
       darkTheme: MyAppStyle.darkTheme,

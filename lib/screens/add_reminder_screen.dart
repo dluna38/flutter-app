@@ -22,8 +22,8 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
   final TextEditingController _daysController = TextEditingController();
   TimeOfDay _selectedTime = TimeOfDay(hour: 9, minute: 0);
   TypeCareEvent? _selectedTypeEvent;
-  DateTime _selectedDate = DateTime.now().add(Duration(days: 1));
-  bool showNextDueText = false;
+  final DateTime currentDate = DateTime.now();
+  late DateTime _selectedDate = currentDate.add(Duration(days: 1));
 
   @override
   void initState() {
@@ -51,8 +51,8 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: _selectedDate,
+      firstDate: _selectedDate,
+      lastDate: DateTime(2100),
     );
     if (picked != null && picked != _selectedDate) {
       debugPrint('Guardar: $picked');
@@ -62,31 +62,15 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     }
   }
 
-  void showNextDue() {
-    debugPrint('showNextDue');
-    if (_taskController.text.isEmpty || _daysController.text.isEmpty) {
-      return;
-    }
-    setState(() {
-      showNextDueText = true;
-    });
-  }
 
   void showAlertDialogSave(BuildContext context) {
     if (_taskController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, ingresa qué recordar.')),
-      );
+      showMessenger(context,'Por favor, ingresa qué recordar.');
       return;
     }
     int? days = int.tryParse(_daysController.text);
     if (days == null || days < 1) {
-      // Muestra un mensaje al usuario si los días no son válidos
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, ingresa un número válido de días.'),
-        ),
-      );
+      showMessenger(context,'Por favor, ingresa un número válido de días.');
       return;
     }
     showDialog(
@@ -115,6 +99,12 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
           ],
         );
       },
+    );
+  }
+
+  void showMessenger(BuildContext context,String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
@@ -238,9 +228,6 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               decoration: const InputDecoration(
                 labelText: 'Repetir cada tantos dias:',
               ),
-              onChanged: (event) {
-                showNextDue();
-              },
             ),
             const SizedBox(height: 20),
             Row(

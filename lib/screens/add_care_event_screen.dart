@@ -15,13 +15,6 @@ class AddCareEventScreen extends StatefulWidget {
 
 class _AddCareEventScreenState extends State<AddCareEventScreen> {
   late Plant plant;
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    plant = widget.plant;
-  }
-
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay(
     hour: DateTime.now().hour,
@@ -29,6 +22,14 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
   );
   final TextEditingController _notesController = TextEditingController();
   TypeCareEvent selectedTypeEvent = TypeCareEvent.riego;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    plant = widget.plant;
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -128,7 +129,7 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
                 ButtonSegment<TypeCareEvent>(
                   value: TypeCareEvent.cambioAbono,
                   label: Text('C. tierra'),
-                  icon: Icon(Icons.energy_savings_leaf),
+                  icon: Icon(Icons.compost),
                 ),
               ],
               selected: <TypeCareEvent>{selectedTypeEvent},

@@ -230,14 +230,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 Plant? freshPlant = await DatabaseHelper().getPlantById(
                   plant.id!,
                 );
-
                 if (freshPlant != null) {
                   setState(() {
                     plantUpdated = true;
                     plant = freshPlant;
                   });
                 }
-
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -478,8 +476,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
           itemBuilder: (context, index) {
             final reminder = loadedReminders[index];
             return _ReminderCard(
-              reminderText: reminder.task,
-              frequencyDays: '${reminder.frequencyDays}',
+              reminder: reminder,
               onCancel:
                   () => _showDeleteReminderConfirmationDialog(context, index),
             );
@@ -556,17 +553,16 @@ class ScheduleTile extends StatelessWidget {
     );
   }
 
-  // (Opcional) Helper para obtener un icono según el tipo de evento
   IconData _getEventTypeIcon(TypeCareEvent type) {
     switch (type) {
       case TypeCareEvent.riego:
         return Icons.water_drop_outlined;
       case TypeCareEvent.fertilizante:
-        return Icons.eco_outlined;
+        return Icons.compost;
       case TypeCareEvent.poda:
         return Icons.content_cut;
-      default:
-        return Icons.yard_outlined;
+      case TypeCareEvent.cambioAbono:
+        return Icons.compost;
     }
   }
 }
@@ -650,16 +646,18 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _ReminderCard extends StatelessWidget {
-  final String reminderText;
-  final String frequencyDays;
+  final Reminder reminder;
   final VoidCallback onCancel;
 
   const _ReminderCard({
-    required this.reminderText,
-    required this.frequencyDays,
+    required this.reminder,
     required this.onCancel,
   });
 
+  DateTime calcNextDue(DateTime date){
+    return reminder.nextDue.isBefore(DateTime.now()) ?
+    date.add(Duration(days: reminder.frequencyDays)) : date;
+  }
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
@@ -673,18 +671,26 @@ class _ReminderCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildReminderRow('Recuérdame:', reminderText, context),
+          _buildReminderRow('Recuérdame:', reminder.task, context),
           const SizedBox(height: 8),
-          _buildReminderRow('Frecuencia:', '$frequencyDays días', context),
-          const SizedBox(height: 12),
+          _buildReminderRow('Frecuencia:', '${reminder.frequencyDays} días', context),
+          const SizedBox(height: 8),
+          _buildReminderRow('Próximo:', StringHelpers.formatLocalDate(calcNextDue(reminder.nextDue), context), context),
+          const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: onCancel,
+              style:  TextButton.styleFrom(
+                backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
               child: const Text(
                 'Cancelar',
                 style: TextStyle(color: Colors.redAccent),
-              ),
+              )
             ),
           ),
         ],

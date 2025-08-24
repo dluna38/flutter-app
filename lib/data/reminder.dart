@@ -33,6 +33,7 @@ class Reminder {
       title: "PlantApp",
       body: reminder.task,
       startTime: reminder.nextDue,
+      payload: NotificationHelper.createPayload({'type':'care-event','plantId':reminder.plantId.toString()})
     );
     //DateTime.now().millisecondsSinceEpoch()
   }
