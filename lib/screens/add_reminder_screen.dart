@@ -110,20 +110,13 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
 
   void _saveReminder(BuildContext context) async {
     int? days = int.tryParse(_daysController.text);
-    DateTime now = DateTime.now();
-    DateTime nextDue = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      _selectedTime.hour,
-      _selectedTime.minute,
-    ).add(Duration(days: days!));
-    //DateTime nextDue = now.add(Duration(minutes: 16));
+    //DateTime nextDue = _selectedDate.copyWith(minute: _selectedTime.minute,hour: _selectedTime.hour).add(Duration(days: days!));
+    DateTime nextDue = currentDate.add(Duration(minutes: 2));
 
     Reminder reminder = Reminder(
       plantId: widget.plant.id!,
-      task: 'Tu planta ${plant.name}: ${_taskController.text}',
-      frequencyDays: days,
+      task: 'Planta ${plant.name}: ${_taskController.text}',
+      frequencyDays: days!,
       nextDue: nextDue,
       active: 1,
     );

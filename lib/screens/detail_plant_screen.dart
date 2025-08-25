@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/data/care_event.dart';
 import 'package:myapp/data/database_helper.dart';
@@ -14,11 +16,13 @@ import 'package:myapp/screens/add_plant_screen.dart';
 import 'add_care_event_screen.dart';
 import 'add_reminder_screen.dart';
 import 'full_care_event_list_screen.dart';
+import 'package:myapp/main.dart';
 // Definimos los colores para reutilizarlos fácilmente
 
 class PlantDetailScreen extends StatefulWidget {
   final Plant plant;
-  const PlantDetailScreen({super.key, required this.plant});
+  final NotificationResponse? notiResponse;
+  const PlantDetailScreen({super.key, required this.plant, this.notiResponse});
 
   @override
   State<PlantDetailScreen> createState() => _PlantDetailScreenState();
@@ -35,8 +39,70 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   void initState() {
     super.initState();
     plant = widget.plant;
+    if (widget.notiResponse != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showAlertDialogFromNotification(widget.notiResponse!);
+      });
+    }
     updateCareEventsDataset();
     _remindersFuture = DatabaseHelper().getReminders(plant.id!);
+  }
+
+  void showAlertDialogFromNotification(NotificationResponse notiResponse) {
+    final payload = jsonDecode(notiResponse.payload!);
+    final String body = payload['body'] ?? '';
+    final BuildContext? context = navigatorKey.currentContext;
+    if (context == null) {
+      debugPrint('context null');
+      return;
+    }
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
+    debugPrint('show dialog');
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.yard_outlined, color: Colors.green),
+              SizedBox(width: 8),
+              Text('Recordatorio'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('¡Es hora de cuidar una de tus plantas! 🌿'),
+              const SizedBox(height: 16),
+              Text.rich(
+                TextSpan(
+                  text: 'Recordatorio: ',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  children: [
+                    TextSpan(
+                      text: body.split(':')[1],
+                      style: TextStyle(color: colorScheme.onSurface),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Ok'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+        );
+      },
+    );
   }
 
   void updateCareEventsDataset() {
@@ -607,11 +673,7 @@ class _ActionButton extends StatelessWidget {
   final IconData? icon;
   final String label;
   final VoidCallback onTap;
-  const _ActionButton({
-    this.icon,
-    required this.label,
-    required this.onTap,
-  });
+  const _ActionButton({this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -627,7 +689,7 @@ class _ActionButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if(icon != null) Icon(icon, color: colorScheme.primary),
+              if (icon != null) Icon(icon, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 label,
@@ -649,15 +711,14 @@ class _ReminderCard extends StatelessWidget {
   final Reminder reminder;
   final VoidCallback onCancel;
 
-  const _ReminderCard({
-    required this.reminder,
-    required this.onCancel,
-  });
+  const _ReminderCard({required this.reminder, required this.onCancel});
 
-  DateTime calcNextDue(DateTime date){
-    return reminder.nextDue.isBefore(DateTime.now()) ?
-    date.add(Duration(days: reminder.frequencyDays)) : date;
+  DateTime calcNextDue(DateTime date) {
+    return reminder.nextDue.isBefore(DateTime.now())
+        ? date.add(Duration(days: reminder.frequencyDays))
+        : date;
   }
+
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
@@ -673,15 +734,26 @@ class _ReminderCard extends StatelessWidget {
         children: [
           _buildReminderRow('Recuérdame:', reminder.task, context),
           const SizedBox(height: 8),
-          _buildReminderRow('Frecuencia:', '${reminder.frequencyDays} días', context),
+          _buildReminderRow(
+            'Frecuencia:',
+            '${reminder.frequencyDays} días',
+            context,
+          ),
           const SizedBox(height: 8),
-          _buildReminderRow('Próximo:', StringHelpers.formatLocalDate(calcNextDue(reminder.nextDue), context), context),
+          _buildReminderRow(
+            'Próximo:',
+            StringHelpers.formatLocalDate(
+              calcNextDue(reminder.nextDue),
+              context,
+            ),
+            context,
+          ),
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: onCancel,
-              style:  TextButton.styleFrom(
+              style: TextButton.styleFrom(
                 backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
@@ -690,7 +762,7 @@ class _ReminderCard extends StatelessWidget {
               child: const Text(
                 'Cancelar',
                 style: TextStyle(color: Colors.redAccent),
-              )
+              ),
             ),
           ),
         ],

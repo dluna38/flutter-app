@@ -299,7 +299,7 @@ class DatabaseHelper {
 
   //LOGS
   Future<void> insertLog(String message, {String level = 'INFO'}) async {
-    debugPrint("$level $message");
+    debugPrint("$level| $message");
     final Database db = await database;
     await db.insert(
       'logs',

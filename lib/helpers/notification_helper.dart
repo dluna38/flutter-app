@@ -74,18 +74,23 @@ class NotificationHelper {
       NotificationResponse notificationResponse,
       ) async{
     if(notificationResponse.payload !=null){
-      Map<String, dynamic> data = json.decode(notificationResponse.payload!);
+      DatabaseHelper().insertLog("open notification");
+      try {
+        Map<String, dynamic> data = json.decode(notificationResponse.payload!);
 
-      if(data.containsKey('type') && data['type'].toString() == 'care-event'){
-        Plant? plant = await DatabaseHelper().getPlantById(data['plantId']);
-        if(plant ==null){
-          return;
-        }
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (context) => PlantDetailScreen(plant: plant,),
-          ),
-        );
+        if(data.containsKey('type') && data['type'].toString() == 'care-event'){
+                Plant? plant = await DatabaseHelper().getPlantById(int.tryParse(data['plantId'])!);
+                if(plant ==null){
+                  return;
+                }
+                navigatorKey.currentState?.push(
+                  MaterialPageRoute(
+                    builder: (context) => PlantDetailScreen(plant: plant,notiResponse: notificationResponse,),
+                  ),
+                );
+              }
+      } catch (e) {
+        DatabaseHelper().insertLog("error open notification: $e",level: 'ERROR');
       }
     }
 
@@ -99,5 +104,6 @@ class NotificationHelper {
   static String createPayload(Map<String, dynamic> notificationPayload){
     return json.encode(notificationPayload);
   }
+
 }
 

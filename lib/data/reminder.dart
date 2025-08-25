@@ -27,13 +27,13 @@ class Reminder {
       DatabaseHelper().insertLog('reminder id null',level: 'ERROR');
       return;
     }
-
+    DatabaseHelper().insertLog('new notification: id:${reminder.id}|due:${reminder.nextDue}',level: 'INFO');
     NotificationHelper.scheduleReminder(
       notiId: reminder.id!,
-      title: "PlantApp",
+      title: "Recordatorio - Mis plantitas",
       body: reminder.task,
       startTime: reminder.nextDue,
-      payload: NotificationHelper.createPayload({'type':'care-event','plantId':reminder.plantId.toString()})
+      payload: NotificationHelper.createPayload({'type':'care-event','plantId':reminder.plantId.toString(),'body':reminder.task})
     );
     //DateTime.now().millisecondsSinceEpoch()
   }
