@@ -106,7 +106,11 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           }
         },
-        child: Text('+'),
+        style: ElevatedButton.styleFrom(
+          shape: const CircleBorder(),
+           padding: const EdgeInsets.all(5)
+        ),
+        child: Text('+',style: TextStyle(fontSize: 35),),
       ),
       persistentFooterButtons: [
         ElevatedButton(

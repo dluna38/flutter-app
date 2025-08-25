@@ -149,50 +149,52 @@ class _FormPlantState extends State<FormPlant> {
                     width: 2,
                     style:
                         BorderStyle
-                            .solid, // Para hacerla punteada, se necesitaría un package o un CustomPainter
+                            .solid,
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton.filled(
-                          onPressed: _takePhoto,
-                          icon: Icon(Icons.photo_camera),
-                        ),
-                        Text(
-                          'Tomar foto',
-                          style: TextTheme.of(context).labelSmall,
-                        ),
-                      ],
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton.filled(
+                            onPressed: _takePhoto,
+                            icon: Icon(Icons.photo_camera),
+                          ),
+                          Text(
+                            'Tomar foto',
+                            style: TextTheme.of(context).labelSmall,
+                          ),
+                        ],
+                      ),
                     ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image(
-                          height: 55,
-                          image: AssetImage('resources/placeholder-img.jpg'),
-                        ),
-                        Text(
-                          'Agregar imagen',
-                          style: TextTheme.of(context).headlineSmall,
-                        ),
-                      ],
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image(
+                            height: 55,
+                            image: AssetImage('resources/placeholder-img.jpg'),
+                          ),
+                        ],
+                      ),
                     ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton.filled(
-                          onPressed: _getImage,
-                          icon: Icon(Icons.photo_library),
-                        ),
-                        Text(
-                          'Galeria',
-                          style: TextTheme.of(context).labelSmall,
-                        ),
-                      ],
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton.filled(
+                            onPressed: _getImage,
+                            icon: Icon(Icons.photo_library),
+                          ),
+                          Text(
+                            'Galeria',
+                            style: TextTheme.of(context).labelSmall,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
