@@ -38,6 +38,10 @@ class Reminder {
     //DateTime.now().millisecondsSinceEpoch()
   }
 
+  DateTime setNewNextDue(){
+    nextDue = nextDue.add(Duration(days: frequencyDays));
+    return nextDue;
+  }
 
   Map<String, dynamic> toMap() {
     return {

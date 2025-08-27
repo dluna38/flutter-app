@@ -13,10 +13,7 @@ import 'helpers/notification_helper.dart';
 import 'screens/add_plant_screen.dart';
 import 'screens/plant_list_screen.dart';
 
-
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,9 +27,10 @@ void main() {
     'task-schedule-reminder',
     frequency: Duration(hours: 24),
     initialDelay: Duration(seconds: 10),
-    existingWorkPolicy: ExistingWorkPolicy.replace
+    existingWorkPolicy: ExistingWorkPolicy.replace,
   );
   initializeDateFormatting();
+
   runApp(const MyApp());
 }
 
@@ -58,10 +56,8 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: <Locale>[
-        const Locale('es','US'),
-      ],
-      locale: Locale('es','US'),
+      supportedLocales: <Locale>[const Locale('es', 'US')],
+      locale: Locale('es', 'US'),
     );
   }
 }
@@ -74,7 +70,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   Key _plantListKey = UniqueKey();
 
   @override
@@ -83,7 +78,10 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         leading: const Icon(Icons.eco),
-        title:  Text("Mis Plantas",style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        title: Text(
+          "Mis Plantas",
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        ),
       ),
       floatingActionButton: ElevatedButton(
         onPressed: () async {
@@ -108,9 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         style: ElevatedButton.styleFrom(
           shape: const CircleBorder(),
-           padding: const EdgeInsets.all(5)
+          padding: const EdgeInsets.all(5),
         ),
-        child: Text('+',style: TextStyle(fontSize: 35),),
+        child: Text('+', style: TextStyle(fontSize: 35)),
       ),
       persistentFooterButtons: [
         ElevatedButton(
@@ -123,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Text('Logs'),
         ),
       ],
-      body: PlantListScreen(key: _plantListKey,),
+      body: PlantListScreen(key: _plantListKey),
     );
   }
 }
@@ -245,20 +243,23 @@ void callbackDispatcher() {
     switch (task) {
       case "task-schedule-reminder":
         try {
-          DatabaseHelper().insertLog('Se ejecuta tarea: task-schedule-reminder');
           List<Reminder> list =
-                      await DatabaseHelper().getActiveAndPastDueReminders();
-          DatabaseHelper().insertLog('Numbers of Reminders activeAndPast: ${list.length}');
+              await DatabaseHelper().getActiveAndPastDueReminders();
+          DatabaseHelper().insertLog(
+            'Numbers of Reminders activeAndPast: ${list.length}',
+          );
 
           for (var reminder in list) {
-                    DateTime newNextDue = reminder.nextDue.add(Duration(days: reminder.frequencyDays));
-                    //DateTime newNextDue = reminder.nextDue.add(Duration(minutes: 16));
-                    DatabaseHelper().updateReminderNextDue(reminder, newNextDue);
-                    reminder.nextDue = newNextDue;
-                    Reminder.scheduleNotification(reminder);
-                  }
+            reminder.setNewNextDue();
+            //DateTime newNextDue = reminder.nextDue.add(Duration(minutes: 16));
+            DatabaseHelper().updateReminderNextDue(reminder, reminder.nextDue);
+            Reminder.scheduleNotification(reminder);
+          }
         } catch (e) {
-          DatabaseHelper().insertLog('Error ejecutando tarea: $e',level: LevelLog.error.normalName);
+          DatabaseHelper().insertLog(
+            'Error ejecutando tarea: $e',
+            level: LevelLog.error.normalName,
+          );
           return Future.error(false);
         }
         break;
@@ -266,24 +267,6 @@ void callbackDispatcher() {
         // Handle unknown task types
         break;
     }
-
-    //task
-    /*
-    // Schedule a one-time task
-      Workmanager().registerOneOffTask(
-      "sync-task",
-      "data_sync",
-      initialDelay: Duration(seconds: 10),
-      );
-
-      // Schedule a periodic task
-      Workmanager().registerPeriodicTask(
-      "cleanup-task",
-      "cleanup",
-      frequency: Duration(hours: 24),
-      );
-     */
-
     return Future.value(true);
   });
 }

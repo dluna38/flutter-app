@@ -26,18 +26,23 @@ class NotificationHelper {
   }
   static Future<void> initNotifications() async {
     // Initialize timezone for scheduled notifications
-    initTimezones();
+    try {
+      initTimezones();
 
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+      const AndroidInitializationSettings initializationSettingsAndroid =
+              AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+      const InitializationSettings initializationSettings =
+              InitializationSettings(android: initializationSettingsAndroid);
 
-    await _notificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
-    );
+      await _notificationsPlugin.initialize(
+            initializationSettings,
+            onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
+          );
+    } catch (e) {
+      DatabaseHelper().insertLog("error initNotications: $e",level: 'ERROR');
+    }
+
   }
 
   static Future<void> scheduleReminder({
@@ -60,6 +65,7 @@ class NotificationHelper {
           channelDescription: 'Reminder notifications',
           importance: Importance.max,
           priority: Priority.high,
+          icon: 'ic_stat_plant'
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

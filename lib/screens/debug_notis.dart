@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:myapp/helpers/widget_helpers.dart';
 import '../helpers/notification_helper.dart'; // Asegúrate de que la ruta sea correcta
 
 class PendingNotificationsScreen extends StatefulWidget {
@@ -20,11 +21,15 @@ class _PendingNotificationsScreenState extends State<PendingNotificationsScreen>
   }
 
   Future<void> _loadPendingNotifications() async {
-    final notis = await NotificationHelper.getNotis();
-    setState(() {
-      _pendingNotifications = notis;
-      _isLoading = false;
-    });
+    try {
+      final notis = await NotificationHelper.getNotis();
+      setState(() {
+            _pendingNotifications = notis;
+            _isLoading = false;
+          });
+    } catch (e) {
+      WidgetHelpers.showAlertDialog(body: "fallo: $e");
+    }
   }
 
   @override
