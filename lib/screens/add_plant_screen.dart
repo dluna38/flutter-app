@@ -5,7 +5,7 @@ import 'package:myapp/data/database_helper.dart';
 import 'package:myapp/data/plant.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:myapp/helpers/string_helpers.dart';
-
+import 'package:myapp/screens/ai_care_screen.dart';
 
 class AddPlantScreen extends StatelessWidget {
   final Plant? updatePlant;
@@ -82,7 +82,7 @@ class _FormPlantState extends State<FormPlant> {
       _notesController.text = oldPlant!.notes ?? "";
       _selectedDate = oldPlant!.acquisitionDate;
       _imagePath = oldPlant!.imagePath;
-    }else{
+    } else {
       oldPlant = null;
     }
   }
@@ -147,9 +147,7 @@ class _FormPlantState extends State<FormPlant> {
                   border: Border.all(
                     color: Colors.grey[400]!,
                     width: 2,
-                    style:
-                        BorderStyle
-                            .solid,
+                    style: BorderStyle.solid,
                   ),
                 ),
                 child: Row(
@@ -279,9 +277,30 @@ class _FormPlantState extends State<FormPlant> {
             controller: _notesController,
             maxLines: 4,
             decoration: InputDecoration(
-              labelText: 'Notas adicionales',
+              labelText: 'Notas / Cuidados',
               hintText: 'Regar solo con agua de lluvia',
               hintStyle: hintStyle,
+              suffixIcon: IconButton(
+                icon: Icon(Icons.auto_fix_high), // Icono de IA, por ejemplo
+                onPressed: () async {
+                  if(!_formKey.currentState!.validate()){
+                    return;
+                  }
+                  String? text = await Navigator.push<String?>(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => AiCareFormScreen(
+                            plantCommonName: _nameController.text,
+                            species: _speciesController.text,
+                          ),
+                    ),
+                  );
+                  if (text != null) {
+                    _notesController.text = text;
+                  }
+                },
+              ),
             ),
           ),
           Center(
