@@ -61,7 +61,7 @@ class _AiCareFormScreenState extends State<AiCareFormScreen> {
       String userMessage = AiHelper().createUserMessage(_plantCommonNameController.text, _speciesController.text, _locationController.text);
       AiResponse response = await AiHelper().getChatCompletion(userMessage);
 
-      if(!response.result){
+      if(!response.result && context.mounted){
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Servicio no disponible, intentalo mas tarde')),
         );

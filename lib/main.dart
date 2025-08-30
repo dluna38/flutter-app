@@ -3,7 +3,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:myapp/data/reminder.dart';
 import 'package:myapp/helpers/my_app_style.dart';
 import 'package:myapp/helpers/string_helpers.dart';
-import 'package:myapp/screens/chat_screen.dart';
 import 'package:myapp/screens/debug_notis.dart';
 import 'package:myapp/screens/logs_list_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
