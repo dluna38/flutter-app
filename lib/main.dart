@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:myapp/data/reminder.dart';
 import 'package:myapp/helpers/my_app_style.dart';
@@ -19,7 +20,8 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   NotificationHelper.initNotifications();
-  Workmanager().initialize(callbackDispatcher);
+  // Obtener los detalles de lanzamiento de la aplicación
+  NotificationHelper().checkLaunchDetails();
 
   Workmanager().cancelAll();
   Workmanager().registerPeriodicTask(
@@ -29,6 +31,7 @@ void main() {
     initialDelay: Duration(seconds: 10),
     existingWorkPolicy: ExistingWorkPolicy.replace,
   );
+  Workmanager().initialize(callbackDispatcher);
   initializeDateFormatting();
 
   runApp(const MyApp());

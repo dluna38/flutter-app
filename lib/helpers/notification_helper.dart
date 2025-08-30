@@ -79,6 +79,7 @@ class NotificationHelper {
   static void onDidReceiveNotificationResponse (
       NotificationResponse notificationResponse,
       ) async{
+    debugPrint("onDidReceiveNotificationResponse");
     if(notificationResponse.payload !=null){
       DatabaseHelper().insertLog("open notification");
       try {
@@ -111,5 +112,16 @@ class NotificationHelper {
     return json.encode(notificationPayload);
   }
 
+  void checkLaunchDetails() async{
+    final NotificationAppLaunchDetails? notificationAppLaunchDetails = await _notificationsPlugin.getNotificationAppLaunchDetails();
+
+    if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+      // Si la app se lanzó por una notificación
+      final NotificationResponse notificationResponse =
+      notificationAppLaunchDetails!.notificationResponse!;
+      // Aquí puedes manejar la respuesta, por ejemplo, navegar a una pantalla específica
+      onDidReceiveNotificationResponse(notificationResponse);
+    }
+  }
 }
 

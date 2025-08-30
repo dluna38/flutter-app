@@ -2,6 +2,7 @@ import 'dart:core';
 
 import 'package:flutter/material.dart';
 import 'package:myapp/helpers/ai_helper.dart';
+import 'package:myapp/helpers/count_ai_request_helper.dart';
 
 class AiCareFormScreen extends StatefulWidget {
   final String plantCommonName;
@@ -21,12 +22,12 @@ class _AiCareFormScreenState extends State<AiCareFormScreen> {
 
   String _aiNotes = '';
   bool _isSearching = false;
-  int _searchCount = 0;
-  static const int maxSearchesPerDay = 3;
+  int? _counterLimit;
 
   @override
   void initState() {
     super.initState();
+    _refreshCounter();
     // TODO: implement initState
     if(widget.plantCommonName.isNotEmpty){
       _plantCommonNameController.text = widget.plantCommonName;
@@ -36,6 +37,18 @@ class _AiCareFormScreenState extends State<AiCareFormScreen> {
     }
   }
 
+  void _refreshCounter() async{
+    int value = await CounterAiHelper().getCounter();
+    setState(() {
+      _counterLimit = value;
+    });
+  }
+  void _decrementCounter() async {
+    final value = await CounterAiHelper().decrementCounter();
+    setState(() {
+      _counterLimit = value;
+    });
+  }
   @override
   void dispose() {
     _plantCommonNameController.dispose();
@@ -46,9 +59,11 @@ class _AiCareFormScreenState extends State<AiCareFormScreen> {
   }
 
   Future<void> _fetchAiResponse() async {
-    if (_searchCount >= maxSearchesPerDay) {
+    _refreshCounter();
+
+    if (_counterLimit == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Has alcanzado el límite de 3 búsquedas por día.')),
+        const SnackBar(content: Text('Has alcanzado el límite de búsquedas por día.')),
       );
       return;
     }
@@ -65,6 +80,9 @@ class _AiCareFormScreenState extends State<AiCareFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Servicio no disponible, intentalo mas tarde')),
         );
+        setState(() {
+          _isSearching = false;
+        });
         return;
       }
 
@@ -72,13 +90,14 @@ class _AiCareFormScreenState extends State<AiCareFormScreen> {
         _aiNotes = response.response!;
         _notesController.text = _aiNotes;
         _isSearching = false;
-        _searchCount++;
+        _decrementCounter();
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Buscar cuidados con IA'),
@@ -158,21 +177,22 @@ class _AiCareFormScreenState extends State<AiCareFormScreen> {
                       ),
                       const SizedBox(width: 16),
                       ElevatedButton.icon(
-                        onPressed: _searchCount < maxSearchesPerDay
-                            ? _isSearching ? null : _fetchAiResponse
-                            : null,
+                        onPressed: _isSearching ? null : _fetchAiResponse,
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Generar otra vez'),
+                        label: _isSearching
+                            ? const CircularProgressIndicator()
+                            : const Text('Generar otra vez'),
                       ),
                     ],
                   ],
                 ),
                 const SizedBox(height: 16),
+                _counterLimit != null ?
                 Text(
-                  'Búsquedas restantes hoy: ${maxSearchesPerDay - _searchCount}',
+                  'Búsquedas restantes hoy: ${_counterLimit!}',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall,
-                ),
+                ):SizedBox.shrink(),
               ],
             ),
           ),
