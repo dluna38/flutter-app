@@ -46,6 +46,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     }
     updateCareEventsDataset();
     _remindersFuture = DatabaseHelper().getReminders(plant.id!);
+    //precacheImage(provider, context)
   }
 
   void showAlertDialogFromNotification(NotificationResponse notiResponse) {

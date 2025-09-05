@@ -11,6 +11,7 @@ import 'package:workmanager/workmanager.dart';
 
 import 'data/database_helper.dart';
 import 'helpers/notification_helper.dart';
+import 'l10n/app_localizations.dart';
 import 'screens/add_plant_screen.dart';
 import 'screens/plant_list_screen.dart';
 
@@ -59,8 +60,14 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: <Locale>[const Locale('es', 'US')],
+      supportedLocales: <Locale>[const Locale('es', 'US'),/*const Locale('en', 'US')*/],
       locale: Locale('es', 'US'),
+      /*localeResolutionCallback: (locale, supportedLocales) {
+        if (supportedLocales.contains(locale)) {
+          return locale;
+        }
+        return const Locale('es', ''); // Idioma por defecto
+      },*/
     );
   }
 }
@@ -82,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         leading: const Icon(Icons.eco),
         title: Text(
-          "Mis Plantas",
+          "Mis plantas",
           style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
       ),

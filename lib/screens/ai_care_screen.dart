@@ -3,6 +3,7 @@ import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:myapp/helpers/ai_helper.dart';
 import 'package:myapp/helpers/count_ai_request_helper.dart';
+import 'package:myapp/screens/full_loader_screen.dart';
 
 class AiCareFormScreen extends StatefulWidget {
   final String plantCommonName;
@@ -76,10 +77,13 @@ class _AiCareFormScreenState extends State<AiCareFormScreen> {
       String userMessage = AiHelper().createUserMessage(_plantCommonNameController.text, _speciesController.text, _locationController.text);
       AiResponse response = await AiHelper().getChatCompletion(userMessage);
 
-      if(!response.result && context.mounted){
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Servicio no disponible, intentalo mas tarde')),
-        );
+      if(!response.result){
+        if(context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Servicio no disponible, intentalo mas tarde')),
+          );
+        }
         setState(() {
           _isSearching = false;
         });
@@ -102,98 +106,101 @@ class _AiCareFormScreenState extends State<AiCareFormScreen> {
       appBar: AppBar(
         title: const Text('Buscar cuidados con IA'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _plantCommonNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre común de la planta',
-                    hintText: 'Ej: Lengua de suegra',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, ingresa el nombre de la planta';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _speciesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Especie',
-                    hintText: 'Ej: Sansevieria trifasciata',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _locationController,
-                  decoration: const InputDecoration(
-                    labelText: 'Ubicación',
-                    hintText: 'Ej: Colombia',
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Campo de texto para las notas generadas por la IA
-                SizedBox(
-                  height: 200,
-                  child: TextFormField(
-                    controller: _notesController,
-                    maxLines: null, // Permite que el texto se expanda verticalmente
-                    expands: true, // El widget ocupa todo el espacio del padre
-                    readOnly: true,
-                    textAlignVertical: TextAlignVertical.top,
+      body: FullScreenLoader(
+        isLoading: _isSearching,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    controller: _plantCommonNameController,
                     decoration: const InputDecoration(
-                      labelText: 'Notas / Cuidados (Generado por IA)',
-                      hintText: 'Aquí aparecerán los cuidados de la planta...',
+                      labelText: 'Nombre común de la planta',
+                      hintText: 'Ej: Lengua de suegra',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, ingresa el nombre de la planta';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _speciesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Especie',
+                      hintText: 'Ej: Sansevieria trifasciata',
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                // Botones dinámicos
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    if (_aiNotes.isEmpty)
-                      ElevatedButton(
-                        onPressed: _isSearching ? null : _fetchAiResponse,
-                        child: _isSearching
-                            ? const CircularProgressIndicator()
-                            : const Text('Buscar'),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _locationController,
+                    decoration: const InputDecoration(
+                      labelText: 'Ubicación',
+                      hintText: 'Ej: Colombia',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Campo de texto para las notas generadas por la IA
+                  SizedBox(
+                    height: 200,
+                    child: TextFormField(
+                      controller: _notesController,
+                      maxLines: null, // Permite que el texto se expanda verticalmente
+                      expands: true, // El widget ocupa todo el espacio del padre
+                      readOnly: true,
+                      textAlignVertical: TextAlignVertical.top,
+                      decoration: const InputDecoration(
+                        labelText: 'Notas / Cuidados (Generado por IA)',
+                        hintText: 'Aquí aparecerán los cuidados de la planta...',
                       ),
-                    if (_aiNotes.isNotEmpty) ...[
-                      ElevatedButton.icon(
-                        onPressed: (){
-                          Navigator.pop(context,_aiNotes);
-                        },
-                        icon: const Icon(Icons.check),
-                        label: const Text('Seleccionar'),
-                      ),
-                      const SizedBox(width: 16),
-                      ElevatedButton.icon(
-                        onPressed: _isSearching ? null : _fetchAiResponse,
-                        icon: const Icon(Icons.refresh),
-                        label: _isSearching
-                            ? const CircularProgressIndicator()
-                            : const Text('Generar otra vez'),
-                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Botones dinámicos
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      if (_aiNotes.isEmpty)
+                        ElevatedButton(
+                          onPressed: _isSearching ? null : _fetchAiResponse,
+                          child: _isSearching
+                              ? const CircularProgressIndicator()
+                              : const Text('Buscar'),
+                        ),
+                      if (_aiNotes.isNotEmpty) ...[
+                        ElevatedButton.icon(
+                          onPressed: (){
+                            Navigator.pop(context,_aiNotes);
+                          },
+                          icon: const Icon(Icons.check),
+                          label: const Text('Seleccionar'),
+                        ),
+                        const SizedBox(width: 16),
+                        ElevatedButton.icon(
+                          onPressed: _isSearching ? null : _fetchAiResponse,
+                          icon: const Icon(Icons.refresh),
+                          label: _isSearching
+                              ? const CircularProgressIndicator()
+                              : const Text('Generar otra vez'),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _counterLimit != null ?
-                Text(
-                  'Búsquedas restantes hoy: ${_counterLimit!}',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ):SizedBox.shrink(),
-              ],
+                  ),
+                  const SizedBox(height: 16),
+                  _counterLimit != null ?
+                  Text(
+                    'Búsquedas restantes hoy: ${_counterLimit!}',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ):SizedBox.shrink(),
+                ],
+              ),
             ),
           ),
         ),
