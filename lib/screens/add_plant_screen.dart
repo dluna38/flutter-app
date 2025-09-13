@@ -92,6 +92,8 @@ class _FormPlantState extends State<FormPlant> {
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 70,
+      maxHeight: 512,
+      requestFullMetadata: false
     );
 
     setState(() {
@@ -103,7 +105,7 @@ class _FormPlantState extends State<FormPlant> {
 
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.camera,imageQuality: 70,);
+    final pickedFile = await picker.pickImage(source: ImageSource.camera,imageQuality: 70,maxHeight: 512,requestFullMetadata: false);
     setState(() {
       if (pickedFile != null) {
         _imagePath = pickedFile.path;

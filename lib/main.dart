@@ -173,7 +173,7 @@ class _NavBarMainState extends State<NavBarMain> {
       body:
           <Widget>[
             const HomeScreen(),
-            PendingNotificationsScreen(),
+           /* PendingNotificationsScreen(),
             GridView.count(
               // Create a grid with 2 columns.
               // If you change the scrollDirection to horizontal,
@@ -184,7 +184,7 @@ class _NavBarMainState extends State<NavBarMain> {
               children: List.generate(7, (index) {
                 return CardPlant1(index: index);
               }),
-            ),
+            ),*/
           ][currentPageIndex],
     );
   }

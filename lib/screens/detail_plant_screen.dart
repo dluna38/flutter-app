@@ -192,7 +192,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             plant.imagePath != null
                 ? Image.file(
                   File(plant.imagePath ?? IOHelpers.defaultPlaceholder),
-                  fit: BoxFit.cover,
+                  fit: BoxFit.fitWidth,
                   colorBlendMode: BlendMode.darken,
                   color: Colors.black.withValues(alpha: 0.4),
                 )
