@@ -1,4 +1,4 @@
-package com.example.myapp
+package com.dluna.misplantitas
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -300,7 +300,7 @@ class DatabaseHelper {
   //LOGS
   Future<void> insertLog(String message, {String level = 'INFO'}) async {
     debugPrint("$level| $message");
-    final Database db = await database;
+    /*final Database db = await database;
     await db.insert(
       'logs',
       {
@@ -309,7 +309,7 @@ class DatabaseHelper {
         'message': message,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    );*/
   }
 
   Future<List<Map<String, dynamic>>> getLogs() async {
