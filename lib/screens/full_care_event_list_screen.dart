@@ -17,7 +17,7 @@ class CareEventsScreen extends StatefulWidget {
 
 class _CareEventsScreenState extends State<CareEventsScreen> {
   late Future<List<CareEvent>> _careEventsFuture;
-  Map<String, String> _filters = {};
+  final Map<String, String> _filters = {};
   DateTime? _startDate;
   DateTime? _endDate;
   TypeCareEvent? _selectedType;
@@ -77,16 +77,11 @@ class _CareEventsScreenState extends State<CareEventsScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Eventos de ${widget.plant.name}'),
-      ),
+      appBar: AppBar(title: Text('Eventos de ${widget.plant.name}')),
       body: Column(
         children: [
           _buildFilterControls(colorScheme),
-          Divider(
-            color: colorScheme.primary,
-            thickness: 1.8,
-          ),
+          Divider(color: colorScheme.primary, thickness: 1.8),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(left: 12.0),
@@ -98,11 +93,15 @@ class _CareEventsScreenState extends State<CareEventsScreen> {
                   }
                   if (snapshot.hasError) {
                     return Center(
-                      child: Text('Error al cargar los eventos: ${snapshot.error}'),
+                      child: Text(
+                        'Error al cargar los eventos: ${snapshot.error}',
+                      ),
                     );
                   }
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No hay eventos registrados.'));
+                    return const Center(
+                      child: Text('No hay eventos registrados.'),
+                    );
                   }
 
                   final events = snapshot.data!;
@@ -141,17 +140,14 @@ class _CareEventsScreenState extends State<CareEventsScreen> {
                   onChanged: (TypeCareEvent? newValue) {
                     _selectedType = newValue;
                     if (newValue != null) {
-                      _filters['type'] =  newValue.index.toString() ;
+                      _filters['type'] = newValue.index.toString();
                     } else {
                       _filters.remove('type');
                     }
                     _fetchCareEvents();
                   },
                   items: [
-                    const DropdownMenuItem(
-                      value: null,
-                      child: Text('Todos'),
-                    ),
+                    const DropdownMenuItem(value: null, child: Text('Todos')),
                     ...TypeCareEvent.values.map((type) {
                       return DropdownMenuItem(
                         value: type,
