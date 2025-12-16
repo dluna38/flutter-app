@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:logging/logging.dart';
 import 'package:myapp/helpers/io_helpers.dart';
@@ -22,6 +21,12 @@ class DatabaseHelper {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
+  }
+
+  Future<void> close() async {
+    final db = await database;
+    await db.close();
+    _database = null;
   }
 
   Future<Database> _initDatabase() async {
@@ -77,9 +82,12 @@ class DatabaseHelper {
   //PLANTS
   Future<int> insertPlant(Plant plant) async {
     try {
-
-      if(plant.imagePath!= null){
-        plant.imagePath= (await IOHelpers.saveImageToLocalStorage(plant.imagePath!,imageName: '${plant.name}_${plant.species}')).path;
+      if (plant.imagePath != null) {
+        plant.imagePath =
+            (await IOHelpers.saveImageToLocalStorage(
+              plant.imagePath!,
+              imageName: '${plant.name}_${plant.species}',
+            )).path;
       }
       Database db = await database;
       int plantId = await db.insert(_PLANT_TABLE, plant.toMap());
@@ -90,34 +98,40 @@ class DatabaseHelper {
       return -1;
     }
   }
-  Future<int> updatePlant(Plant newPlant,Plant oldPlant) async {
+
+  Future<int> updatePlant(Plant newPlant, Plant oldPlant) async {
     try {
       Map<String, Object?> map = {};
-      if(newPlant.name != oldPlant.name){
+      if (newPlant.name != oldPlant.name) {
         map['name'] = newPlant.name;
       }
-      if(newPlant.species != oldPlant.species){
+      if (newPlant.species != oldPlant.species) {
         map['species'] = newPlant.species;
       }
-      if(newPlant.location != oldPlant.location){
+      if (newPlant.location != oldPlant.location) {
         map['location'] = newPlant.location;
       }
-      if(newPlant.notes != oldPlant.notes){
+      if (newPlant.notes != oldPlant.notes) {
         map['notes'] = newPlant.notes;
       }
-      if(newPlant.acquisitionDate != oldPlant.acquisitionDate){
-        map['acquisitionDate'] = newPlant.acquisitionDate?.millisecondsSinceEpoch;
+      if (newPlant.acquisitionDate != oldPlant.acquisitionDate) {
+        map['acquisitionDate'] =
+            newPlant.acquisitionDate?.millisecondsSinceEpoch;
       }
 
-
-      if(newPlant.imagePath!= null && newPlant.imagePath != oldPlant.imagePath){
+      if (newPlant.imagePath != null &&
+          newPlant.imagePath != oldPlant.imagePath) {
         //delete old image - check if null
-        if(oldPlant.imagePath !=null){
+        if (oldPlant.imagePath != null) {
           IOHelpers.removeImageFromLocalStorage(oldPlant.imagePath!);
         }
-        map['imagePath'] = (await IOHelpers.saveImageToLocalStorage(newPlant.imagePath!,imageName: '${newPlant.name}_${newPlant.species}')).path;
+        map['imagePath'] =
+            (await IOHelpers.saveImageToLocalStorage(
+              newPlant.imagePath!,
+              imageName: '${newPlant.name}_${newPlant.species}',
+            )).path;
       }
-      if(newPlant.imagePath== null && oldPlant.imagePath!=null){
+      if (newPlant.imagePath == null && oldPlant.imagePath != null) {
         await IOHelpers.removeImageFromLocalStorage(oldPlant.imagePath!);
         // Establecemos la ruta de la imagen a null en el mapa para la base de datos
         map['imagePath'] = null;
@@ -127,9 +141,13 @@ class DatabaseHelper {
         return oldPlant.id!; // No hay cambios, devuelve el ID existente
       }
 
-
       Database db = await database;
-      int plantId = await db.update(_PLANT_TABLE, map,where: 'id=?',whereArgs: [oldPlant.id]);
+      int plantId = await db.update(
+        _PLANT_TABLE,
+        map,
+        where: 'id=?',
+        whereArgs: [oldPlant.id],
+      );
 
       return plantId;
     } catch (e) {
@@ -137,22 +155,17 @@ class DatabaseHelper {
       return -1;
     }
   }
+
   Future<List<Plant>> getPlants() async {
     Database db = await database;
     final List<Map<String, dynamic>> maps = await db.query('plants');
     List<Plant> plants = List.generate(maps.length, (i) {
-      return Plant(
-        id: maps[i]['id'],
-        name: maps[i]['name'],
-        species: maps[i]['species'],
-        location: maps[i]['location'],
-        notes: maps[i]['notes'],
-        imagePath: maps[i]['imagePath'],
-      );
+      return Plant.fromMap(maps[i]);
     });
 
     return plants;
   }
+
   Future<Plant?> getPlantById(int id) async {
     Database db = await database;
     List<Map<String, dynamic>> maps = await db.query(
@@ -183,9 +196,13 @@ class DatabaseHelper {
       return -1;
     }
   }
+
   deleteCareEvent(int id) {}
 
-  Future<List<CareEvent>> getCareEvents(int plantId, {Map<String, String> filters = const {}}) async {
+  Future<List<CareEvent>> getCareEvents(
+    int plantId, {
+    Map<String, String> filters = const {},
+  }) async {
     Database db = await database;
 
     // Cláusulas WHERE y argumentos para construir la consulta
@@ -198,14 +215,14 @@ class DatabaseHelper {
 
     // Filtro por tipo de evento
     if (filters.containsKey('type') && int.tryParse(filters['type']!) != null) {
-
       whereClauses.add('type = ?');
       whereArgs.add(filters['type']);
     }
 
     // Filtro por fecha de inicio (si existe)
     if (filters.containsKey('startDate')) {
-      final startDate = DateTime.tryParse(filters['startDate']!)?.millisecondsSinceEpoch;
+      final startDate =
+          DateTime.tryParse(filters['startDate']!)?.millisecondsSinceEpoch;
       if (startDate != null) {
         whereClauses.add('date >= ?');
         whereArgs.add(startDate);
@@ -214,7 +231,8 @@ class DatabaseHelper {
 
     // Filtro por fecha de fin (si existe)
     if (filters.containsKey('endDate')) {
-      final endDate = DateTime.tryParse(filters['endDate']!)?.millisecondsSinceEpoch;
+      final endDate =
+          DateTime.tryParse(filters['endDate']!)?.millisecondsSinceEpoch;
       if (endDate != null) {
         whereClauses.add('date <= ?');
         whereArgs.add(endDate);
@@ -244,7 +262,7 @@ class DatabaseHelper {
         'task': reminder.task,
         'frequency': reminder.frequencyDays,
         'nextDue': reminder.nextDue.millisecondsSinceEpoch,
-        'active': reminder.active
+        'active': reminder.active,
       });
       return id;
     } catch (e) {
@@ -253,11 +271,12 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> deleteReminder(int id) async{
+  Future<int> deleteReminder(int id) async {
     Database db = await database;
     return await db.delete(_REMINDERS_TABLE, where: 'id=?', whereArgs: [id]);
   }
-  Future<List<Reminder>> getReminders(int plantId) async{
+
+  Future<List<Reminder>> getReminders(int plantId) async {
     Database db = await database;
 
     final List<Map<String, dynamic>> maps = await db.query(
@@ -271,6 +290,7 @@ class DatabaseHelper {
       return Reminder.fromMap(maps[i]);
     });
   }
+
   Future<List<Reminder>> getActiveAndPastDueReminders() async {
     Database db = await database;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -286,7 +306,7 @@ class DatabaseHelper {
     });
   }
 
-  void updateReminderNextDue(Reminder reminder, DateTime newNextDue) async{
+  void updateReminderNextDue(Reminder reminder, DateTime newNextDue) async {
     Database db = await database;
     final int newNextDueMillis = newNextDue.millisecondsSinceEpoch;
     await db.update(
@@ -319,5 +339,4 @@ class DatabaseHelper {
       orderBy: 'timestamp DESC', // Ordena por los más recientes primero
     );
   }
-
 }

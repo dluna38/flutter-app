@@ -68,7 +68,6 @@ class _FormPlantState extends State<FormPlant> {
   late final Plant? oldPlant;
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     if (widget.updatePlant != null) {
@@ -91,9 +90,9 @@ class _FormPlantState extends State<FormPlant> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 70,
+      imageQuality: 80,
       maxHeight: 512,
-      requestFullMetadata: false
+      requestFullMetadata: false,
     );
 
     setState(() {
@@ -105,7 +104,12 @@ class _FormPlantState extends State<FormPlant> {
 
   Future<void> _takePhoto() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.camera,imageQuality: 70,maxHeight: 512,requestFullMetadata: false);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 80,
+      maxHeight: 512,
+      requestFullMetadata: false,
+    );
     setState(() {
       if (pickedFile != null) {
         _imagePath = pickedFile.path;
@@ -285,7 +289,7 @@ class _FormPlantState extends State<FormPlant> {
               suffixIcon: IconButton(
                 icon: Icon(Icons.auto_fix_high), // Icono de IA, por ejemplo
                 onPressed: () async {
-                  if(!_formKey.currentState!.validate()){
+                  if (!_formKey.currentState!.validate()) {
                     return;
                   }
                   String? text = await Navigator.push<String?>(

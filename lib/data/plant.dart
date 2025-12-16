@@ -1,4 +1,3 @@
-
 import 'package:myapp/data/reminder.dart';
 
 import 'care_event.dart';
@@ -21,8 +20,9 @@ class Plant {
     required this.location,
     this.notes,
     this.imagePath,
-    this.acquisitionDate
-  }) : careEvents = [],reminders=[];
+    this.acquisitionDate,
+  }) : careEvents = [],
+       reminders = [];
 
   Map<String, Object?> toMap([bool withEvents = false]) {
     var map = {
@@ -32,11 +32,8 @@ class Plant {
       'location': location,
       'notes': notes,
       'imagePath': imagePath,
-      'acquisitionDate':acquisitionDate?.millisecondsSinceEpoch
+      'acquisitionDate': acquisitionDate?.millisecondsSinceEpoch,
     };
-    if(withEvents){
-      map['careEvents'] = careEvents.map((e) => e.toMap()).toList();
-    }
     return map;
   }
 
@@ -48,18 +45,18 @@ class Plant {
       notes: map['notes'] as String?,
       imagePath: map['imagePath'] as String?,
     );
-    if(map['acquisitionDate'] != null){
-      plant.acquisitionDate = DateTime.fromMillisecondsSinceEpoch(map['acquisitionDate']);
+    if (map['acquisitionDate'] != null) {
+      plant.acquisitionDate = DateTime.fromMillisecondsSinceEpoch(
+        map['acquisitionDate'],
+      );
     }
     plant.id = map['id'] as int?;
-    if(map['careEvents'] != null){
-      plant.careEvents = (map['careEvents'] as List).map((e) => CareEvent.fromMap(e)).toList();
-    }
+
     return plant;
   }
 
   @override
   String toString() {
-    return 'Plant{id: $id, name: $name, species: $species, location: $location, notes: $notes, imagePath: $imagePath}';
+    return 'Plant{id: $id, name: $name, species: $species, location: $location, notes: $notes, imagePath: $imagePath, acquisitionDate: $acquisitionDate}';
   }
 }

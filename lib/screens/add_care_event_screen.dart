@@ -25,7 +25,6 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     plant = widget.plant;
   }
@@ -213,7 +212,6 @@ class _SegmentedButtonTypeEventState extends State<SegmentedButtonTypeEvent> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _selectedType = widget.chooseType;
   }

@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:myapp/data/reminder.dart';
 import 'package:myapp/helpers/my_app_style.dart';
 import 'package:myapp/helpers/string_helpers.dart';
-import 'package:myapp/screens/debug_notis.dart';
-import 'package:myapp/screens/logs_list_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'data/database_helper.dart';
 import 'helpers/notification_helper.dart';
-import 'l10n/app_localizations.dart';
 import 'screens/add_plant_screen.dart';
 import 'screens/plant_list_screen.dart';
+import 'screens/settings_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -24,6 +21,7 @@ void main() {
   // Obtener los detalles de lanzamiento de la aplicación
   NotificationHelper().checkLaunchDetails();
 
+  Workmanager().initialize(callbackDispatcher);
   Workmanager().cancelAll();
   Workmanager().registerPeriodicTask(
     'schedule-reminder',
@@ -32,7 +30,7 @@ void main() {
     initialDelay: Duration(seconds: 10),
     existingWorkPolicy: ExistingWorkPolicy.replace,
   );
-  Workmanager().initialize(callbackDispatcher);
+
   initializeDateFormatting();
 
   runApp(const MyApp());
@@ -60,7 +58,9 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: <Locale>[const Locale('es', 'US'),/*const Locale('en', 'US')*/],
+      supportedLocales: <Locale>[
+        const Locale('es', 'US') /*const Locale('en', 'US')*/,
+      ],
       locale: Locale('es', 'US'),
       /*localeResolutionCallback: (locale, supportedLocales) {
         if (supportedLocales.contains(locale)) {
@@ -92,6 +92,19 @@ class _HomeScreenState extends State<HomeScreen> {
           "Mis plantas",
           style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          )
+        ],
       ),
       floatingActionButton: ElevatedButton(
         onPressed: () async {

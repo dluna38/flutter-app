@@ -255,15 +255,34 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 format: 'dd/MM/yyyy',
               ),
             ),
-            plant.notes != null ? Column(
-              children: [
-                Center(
-                  child: Text("Notas", style: TextStyle(color: colorScheme.onSurface, fontSize: 15),),
-                ),
-                const SizedBox(height: 8,),
-                SizedBox(height: 120, child: SingleChildScrollView(child: Text(plant.notes! ,style: TextStyle(color: colorScheme.onSurface, fontSize: 15),)))
-              ],
-            ) : SizedBox.shrink(),
+            plant.notes != null
+                ? Column(
+                  children: [
+                    Center(
+                      child: Text(
+                        "Notas",
+                        style: TextStyle(
+                          color: colorScheme.onSurface,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 120,
+                      child: SingleChildScrollView(
+                        child: Text(
+                          plant.notes!,
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+                : SizedBox.shrink(),
             const SizedBox(height: 32),
             _buildEventsHeader(colorScheme),
 
@@ -334,11 +353,6 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               setState(() {
                 iconRegado = true;
               });
-
-              /*
-              TODO
-              change icon Icons.water_drop and text: Regado and disable button
-               */
             },
           ),
         ),

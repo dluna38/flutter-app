@@ -27,7 +27,6 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     plant = widget.plant;
     _daysController.text = "1";
@@ -62,15 +61,14 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     }
   }
 
-
   void showAlertDialogSave(BuildContext context) {
     if (_taskController.text.trim().isEmpty) {
-      showMessenger(context,'Por favor, ingresa qué recordar.');
+      showMessenger(context, 'Por favor, ingresa qué recordar.');
       return;
     }
     int? days = int.tryParse(_daysController.text);
     if (days == null || days < 1) {
-      showMessenger(context,'Por favor, ingresa un número válido de días.');
+      showMessenger(context, 'Por favor, ingresa un número válido de días.');
       return;
     }
     showDialog(
@@ -102,15 +100,18 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     );
   }
 
-  void showMessenger(BuildContext context,String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+  void showMessenger(BuildContext context, String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _saveReminder(BuildContext context) async {
     int? days = int.tryParse(_daysController.text);
-    DateTime nextDue = _selectedDate.copyWith(minute: _selectedTime.minute,hour: _selectedTime.hour);
+    DateTime nextDue = _selectedDate.copyWith(
+      minute: _selectedTime.minute,
+      hour: _selectedTime.hour,
+    );
     //DateTime nextDue = currentDate.add(Duration(minutes: 2));
 
     Reminder reminder = Reminder(
