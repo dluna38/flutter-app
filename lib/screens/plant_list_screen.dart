@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:myapp/data/database_helper.dart';
 import 'package:myapp/data/plant.dart';
@@ -19,11 +18,9 @@ class _PlantListScreenState extends State<PlantListScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _plantsFuture = DatabaseHelper().getPlants();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +43,12 @@ class _PlantListScreenState extends State<PlantListScreen> {
                 itemBuilder: (context, index) {
                   Plant plant = plants[index];
                   return Padding(
-                    padding: const EdgeInsets.only(top: 5,bottom: 5,right: 15,left: 15),
+                    padding: const EdgeInsets.only(
+                      top: 5,
+                      bottom: 5,
+                      right: 15,
+                      left: 15,
+                    ),
                     child: cardPlant(plant),
                   );
                 },
@@ -58,30 +60,34 @@ class _PlantListScreenState extends State<PlantListScreen> {
     );
   }
 
-  Widget cardPlant(Plant plant){
+  Widget cardPlant(Plant plant) {
     return SizedBox(
       height: 100,
-      child:
-      Card(
+      child: Card(
         //color: Theme.of(context).colorScheme.onSurface.withValues(a),
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 20.0,
+            horizontal: 16.0,
+          ),
           onTap: () async {
-            PlantResult? result = await Navigator.push<PlantResult>(context, MaterialPageRoute<PlantResult>(
-              builder: (context) => PlantDetailScreen(plant: plant),
-            ));
-            if(result !=null && result.updated){
-                debugPrint('update list');
-                setState(() {
-                  _plantsFuture = DatabaseHelper().getPlants();
-                });
+            PlantResult? result = await Navigator.push<PlantResult>(
+              context,
+              MaterialPageRoute<PlantResult>(
+                builder: (context) => PlantDetailScreen(plant: plant),
+              ),
+            );
+            if (result != null && result.updated) {
+              debugPrint('update list');
+              setState(() {
+                _plantsFuture = DatabaseHelper().getPlants();
+              });
             }
           },
           leading: IOHelpers.getAvatar(plant.imagePath),
-          title: Text(plant.name,style: TextTheme.of(context).headlineSmall,),
+          title: Text(plant.name, style: TextTheme.of(context).headlineSmall),
         ),
       ),
     );
   }
-
 }

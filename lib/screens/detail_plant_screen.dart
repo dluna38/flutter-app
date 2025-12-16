@@ -152,18 +152,23 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   SliverAppBar _buildSliverAppBar(ColorScheme colorScheme) {
     return SliverAppBar(
       expandedHeight: 250.0,
-      backgroundColor: colorScheme.surface,
+      backgroundColor:
+          colorScheme
+              .primary, // Dark background for collapsed state to support white icons
       pinned: true,
       elevation: 0,
+      iconTheme: const IconThemeData(
+        color: Colors.white,
+      ), // Ensure back button is white
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () {
           Navigator.pop(context, PlantResult(updated: plantUpdated));
         },
       ),
       actions: [
         PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, color: colorScheme.onSurface),
+          icon: const Icon(Icons.more_vert, color: Colors.white),
           onSelected: (value) {
             if (value == 'delete') {
               _deletePlant();
@@ -182,26 +187,48 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         centerTitle: true,
         title: Text(
           toBeginningOfSentenceCase(plant.name),
-          style: TextStyle(
-            color: colorScheme.onSurface,
+          style: const TextStyle(
+            color: Colors.white, // Ensure title is white
             fontWeight: FontWeight.bold,
             fontSize: 16.0,
+            shadows: [
+              Shadow(
+                blurRadius: 2.0,
+                color: Colors.black,
+                offset: Offset(1.0, 1.0),
+              ),
+            ],
           ),
         ),
-        background:
-            plant.imagePath != null
-                ? Image.file(
-                  File(plant.imagePath ?? IOHelpers.defaultPlaceholder),
-                  fit: BoxFit.fitWidth,
-                  colorBlendMode: BlendMode.darken,
-                  color: Colors.black.withValues(alpha: 0.4),
-                )
-                : Image.asset(
-                  IOHelpers.getImagePlaceHolderString(),
-                  fit: BoxFit.cover,
-                  colorBlendMode: BlendMode.darken,
-                  color: Colors.black.withValues(alpha: 0.4),
+        background: GestureDetector(
+          onTap: () {
+            if (plant.imagePath != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => _FullScreenImage(
+                        imageProvider: FileImage(File(plant.imagePath!)),
+                      ),
                 ),
+              );
+            }
+          },
+          child:
+              plant.imagePath != null
+                  ? Image.file(
+                    File(plant.imagePath ?? IOHelpers.defaultPlaceholder),
+                    fit: BoxFit.fitWidth,
+                    colorBlendMode: BlendMode.darken,
+                    color: Colors.black.withValues(alpha: 0.4),
+                  )
+                  : Image.asset(
+                    IOHelpers.getImagePlaceHolderString(),
+                    fit: BoxFit.cover,
+                    colorBlendMode: BlendMode.darken,
+                    color: Colors.black.withValues(alpha: 0.4),
+                  ),
+        ),
       ),
     );
   }
@@ -809,6 +836,33 @@ class _ReminderCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FullScreenImage extends StatelessWidget {
+  final ImageProvider imageProvider;
+
+  const _FullScreenImage({required this.imageProvider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('Imagen', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          panEnabled: true,
+          boundaryMargin: const EdgeInsets.all(20),
+          minScale: 0.5,
+          maxScale: 4,
+          child: Image(image: imageProvider),
+        ),
+      ),
     );
   }
 }

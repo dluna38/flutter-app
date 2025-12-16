@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    child: OutlinedButton.icon(
+                    child: ElevatedButton.icon(
                       onPressed: () => _pickAndRestoreBackup(context),
                       icon: const Icon(Icons.restore),
                       label: const Text('Restaurar Respaldo'),
