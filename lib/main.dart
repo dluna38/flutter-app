@@ -22,13 +22,13 @@ void main() {
   NotificationHelper().checkLaunchDetails();
 
   Workmanager().initialize(callbackDispatcher);
-  Workmanager().cancelAll();
+  //Workmanager().cancelAll();
   Workmanager().registerPeriodicTask(
     'schedule-reminder',
     'task-schedule-reminder',
     frequency: Duration(hours: 24),
     initialDelay: Duration(seconds: 10),
-    existingWorkPolicy: ExistingWorkPolicy.replace,
+    existingWorkPolicy: ExistingWorkPolicy.keep,
   );
 
   initializeDateFormatting();
@@ -98,16 +98,14 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
               // Refresh plant list to apply any view mode changes
               setState(() {
                 _plantListKey = UniqueKey();
               });
             },
-          )
+          ),
         ],
       ),
       floatingActionButton: ElevatedButton(

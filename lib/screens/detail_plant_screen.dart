@@ -178,57 +178,78 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               (context) => [
                 const PopupMenuItem(
                   value: 'delete',
-                  child: Text('Borrar planta'),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min, // Constrain the Row's size
+                    children: [
+                      Icon(Icons.delete, color: Colors.red), // Your Icon widget
+                      SizedBox(
+                        width: 8,
+                      ), // Add some spacing between the icon and text
+                      Text('Borrar planta'), // Your Text widget
+                    ],
+                  ),
                 ),
               ],
         ),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        centerTitle: true,
-        title: Text(
-          toBeginningOfSentenceCase(plant.name),
-          style: const TextStyle(
-            color: Colors.white, // Ensure title is white
-            fontWeight: FontWeight.bold,
-            fontSize: 16.0,
-            shadows: [
-              Shadow(
-                blurRadius: 2.0,
-                color: Colors.black,
-                offset: Offset(1.0, 1.0),
-              ),
-            ],
-          ),
-        ),
-        background: GestureDetector(
-          onTap: () {
-            if (plant.imagePath != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) => _FullScreenImage(
-                        imageProvider: FileImage(File(plant.imagePath!)),
+      flexibleSpace: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          var top = constraints.biggest.height;
+          // Check if collapsed (allowing a small threshold)
+          bool isCollapsed =
+              top <= kToolbarHeight + MediaQuery.of(context).padding.top + 20;
+
+          return FlexibleSpaceBar(
+            centerTitle: true,
+            title:
+                isCollapsed
+                    ? Text(
+                      toBeginningOfSentenceCase(plant.name),
+                      style: const TextStyle(
+                        color: Colors.white, // Ensure title is white
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.0,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 2.0,
+                            color: Colors.black,
+                            offset: Offset(1.0, 1.0),
+                          ),
+                        ],
                       ),
-                ),
-              );
-            }
-          },
-          child:
-              plant.imagePath != null
-                  ? Image.file(
-                    File(plant.imagePath ?? IOHelpers.defaultPlaceholder),
-                    fit: BoxFit.fitWidth,
-                    colorBlendMode: BlendMode.darken,
-                    color: Colors.black.withValues(alpha: 0.4),
-                  )
-                  : Image.asset(
-                    IOHelpers.getImagePlaceHolderString(),
-                    fit: BoxFit.cover,
-                    colorBlendMode: BlendMode.darken,
-                    color: Colors.black.withValues(alpha: 0.4),
-                  ),
-        ),
+                    )
+                    : null,
+            background: GestureDetector(
+              onTap: () {
+                if (plant.imagePath != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => _FullScreenImage(
+                            imageProvider: FileImage(File(plant.imagePath!)),
+                          ),
+                    ),
+                  );
+                }
+              },
+              child:
+                  plant.imagePath != null
+                      ? Image.file(
+                        File(plant.imagePath ?? IOHelpers.defaultPlaceholder),
+                        fit: BoxFit.fitWidth,
+                        colorBlendMode: BlendMode.darken,
+                        color: Colors.black.withValues(alpha: 0.4),
+                      )
+                      : Image.asset(
+                        IOHelpers.getImagePlaceHolderString(),
+                        fit: BoxFit.cover,
+                        colorBlendMode: BlendMode.darken,
+                        color: Colors.black.withValues(alpha: 0.4),
+                      ),
+            ),
+          );
+        },
       ),
     );
   }
