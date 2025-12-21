@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:myapp/helpers/backup_helper.dart';
 
@@ -12,6 +13,30 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  String _viewMode = 'list';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadViewMode();
+  }
+
+  Future<void> _loadViewMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _viewMode = prefs.getString('view_mode') ?? 'list';
+    });
+  }
+
+  Future<void> _updateViewMode(String? newValue) async {
+    if (newValue == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('view_mode', newValue);
+    setState(() {
+      _viewMode = newValue;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,6 +44,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.view_module,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Apariencia',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _viewMode,
+                    decoration: const InputDecoration(
+                      labelText: 'Vista de la lista de plantas',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'list', child: Text('Lista')),
+                      DropdownMenuItem(
+                        value: 'grid_image',
+                        child: Text('Cuadrícula (Imágenes)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'grid_text',
+                        child: Text('Cuadrícula (Texto)'),
+                      ),
+                    ],
+                    onChanged: _updateViewMode,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),

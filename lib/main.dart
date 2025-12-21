@@ -95,13 +95,17 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const SettingsScreen(),
                 ),
               );
+              // Refresh plant list to apply any view mode changes
+              setState(() {
+                _plantListKey = UniqueKey();
+              });
             },
           )
         ],

@@ -90,8 +90,8 @@ class _FormPlantState extends State<FormPlant> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 80,
-      maxHeight: 512,
+      imageQuality: 90,
+      //maxHeight: 512,
       requestFullMetadata: false,
     );
 
@@ -106,8 +106,8 @@ class _FormPlantState extends State<FormPlant> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: ImageSource.camera,
-      imageQuality: 80,
-      maxHeight: 512,
+      imageQuality: 90,
+      //maxHeight: 512,
       requestFullMetadata: false,
     );
     setState(() {
