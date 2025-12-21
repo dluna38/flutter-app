@@ -316,11 +316,37 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    SizedBox(
-                      height: 120,
-                      child: SingleChildScrollView(
+                    InkWell(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder:
+                              (context) => AlertDialog(
+                                title: const Text("Notas"),
+                                content: SingleChildScrollView(
+                                  child: Text(
+                                    plant.notes!,
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text("Cerrar"),
+                                  ),
+                                ],
+                              ),
+                        );
+                      },
+                      child: SizedBox(
+                        width: double.infinity,
                         child: Text(
                           plant.notes!,
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 15,
