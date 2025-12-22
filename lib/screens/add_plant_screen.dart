@@ -321,7 +321,7 @@ class _FormPlantState extends State<FormPlant> {
                       species: _speciesController.text.trim(),
                       location:
                           _locationController.text.isEmpty
-                              ? StringHelpers.NO_LOCATION_PLANT
+                              ? StringHelpers.noLocationPlant
                               : _locationController.text.trim(),
                       notes:
                           _notesController.text.isEmpty

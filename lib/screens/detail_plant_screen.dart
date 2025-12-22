@@ -295,7 +295,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             const SizedBox(height: 16),
             _InfoRow(
               label: 'Ubicación',
-              value: plant.location ?? StringHelpers.NO_LOCATION_PLANT,
+              value: plant.location ?? StringHelpers.noLocationPlant,
             ),
             _InfoRow(
               label: 'Fecha de adquisición',

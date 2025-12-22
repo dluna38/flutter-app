@@ -22,7 +22,7 @@ void main() {
   NotificationHelper().checkLaunchDetails();
 
   Workmanager().initialize(callbackDispatcher);
-  //Workmanager().cancelAll();
+
   Workmanager().registerPeriodicTask(
     'schedule-reminder',
     'task-schedule-reminder',
@@ -58,16 +58,8 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: <Locale>[
-        const Locale('es', 'US') /*const Locale('en', 'US')*/,
-      ],
+      supportedLocales: <Locale>[const Locale('es', 'US')],
       locale: Locale('es', 'US'),
-      /*localeResolutionCallback: (locale, supportedLocales) {
-        if (supportedLocales.contains(locale)) {
-          return locale;
-        }
-        return const Locale('es', ''); // Idioma por defecto
-      },*/
     );
   }
 }
@@ -135,17 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Text('+', style: TextStyle(fontSize: 35)),
       ),
-      /*persistentFooterButtons: [
-        ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => LogScreen()),
-            );
-          },
-          child: Text('Logs'),
-        ),
-      ],*/
+
       body: PlantListScreen(key: _plantListKey),
     );
   }

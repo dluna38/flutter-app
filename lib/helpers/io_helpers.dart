@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
 class IOHelpers {
-  static final String defaultPlaceholder = 'resources/placeholder-img.jpg';
-  static final String imagesFolderName = 'appImages';
-  static final String plantsImagesFolderName = 'plantsImages';
+  static const String defaultPlaceholder = 'resources/placeholder-img.jpg';
+  static const String imagesFolderName = 'appImages';
+  static const String plantsImagesFolderName = 'plantsImages';
 
-  static CircleAvatar getAvatar(path) {
+  static CircleAvatar getAvatar(String? path) {
     return path != null
-        ? CircleAvatar(backgroundImage: FileImage(File(path!)), radius: 30)
+        ? CircleAvatar(backgroundImage: FileImage(File(path)), radius: 30)
         : CircleAvatar(backgroundImage: getImagePlaceHolder(), radius: 30);
   }
 
@@ -59,7 +59,7 @@ class IOHelpers {
     }
   }
 
-  static Future<void> assureOrCreatePath(path) async {
+  static Future<void> assureOrCreatePath(String path) async {
     Directory directory = Directory(path);
     if (!await Directory(path).exists()) {
       await directory.create(recursive: true);

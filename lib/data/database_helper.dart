@@ -33,7 +33,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'plants_database.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -45,21 +45,21 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // Add indexes for existing users
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_care_events_plantId ON care_events(plantId)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_care_events_type ON care_events(type)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_care_events_date ON care_events(date)',
-      );
-      await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_reminders_plantId ON reminders(plantId)',
-      );
-    }
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_care_events_plantId ON care_events(plantId)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_care_events_type ON care_events(type)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_care_events_date ON care_events(date)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_reminders_plantId ON reminders(plantId)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_reminders_active_nextDue ON reminders(active, nextDue)',
+    );
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -115,9 +115,9 @@ class DatabaseHelper {
     ''');
   }
 
-  static const String _PLANT_TABLE = "plants";
-  static const String _REMINDERS_TABLE = 'reminders';
-  static const String _CARE_EVENTS_TABLE = 'care_events';
+  static const String _plantTable = "plants";
+  static const String _remindersTable = 'reminders';
+  static const String _careEventsTable = 'care_events';
 
   //PLANTS
   Future<int> insertPlant(Plant plant) async {
@@ -130,7 +130,7 @@ class DatabaseHelper {
             )).path;
       }
       Database db = await database;
-      int plantId = await db.insert(_PLANT_TABLE, plant.toMap());
+      int plantId = await db.insert(_plantTable, plant.toMap());
 
       return plantId;
     } catch (e) {
@@ -183,7 +183,7 @@ class DatabaseHelper {
 
       Database db = await database;
       int plantId = await db.update(
-        _PLANT_TABLE,
+        _plantTable,
         map,
         where: 'id=?',
         whereArgs: [oldPlant.id],
@@ -209,7 +209,7 @@ class DatabaseHelper {
   Future<Plant?> getPlantById(int id) async {
     Database db = await database;
     List<Map<String, dynamic>> maps = await db.query(
-      _PLANT_TABLE,
+      _plantTable,
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -221,7 +221,7 @@ class DatabaseHelper {
 
   void deletePlant(int id) async {
     Database db = await database;
-    await db.delete(_PLANT_TABLE, where: 'id=?', whereArgs: [id]);
+    await db.delete(_plantTable, where: 'id=?', whereArgs: [id]);
     //return result
   }
 
@@ -303,7 +303,7 @@ class DatabaseHelper {
     final String whereString = whereClauses.join(' AND ');
 
     final List<Map<String, dynamic>> maps = await db.query(
-      _CARE_EVENTS_TABLE,
+      _careEventsTable,
       where: whereString,
       whereArgs: whereArgs,
       orderBy: orderBy,
@@ -334,14 +334,14 @@ class DatabaseHelper {
 
   Future<int> deleteReminder(int id) async {
     Database db = await database;
-    return await db.delete(_REMINDERS_TABLE, where: 'id=?', whereArgs: [id]);
+    return await db.delete(_remindersTable, where: 'id=?', whereArgs: [id]);
   }
 
   Future<List<Reminder>> getReminders(int plantId) async {
     Database db = await database;
 
     final List<Map<String, dynamic>> maps = await db.query(
-      _REMINDERS_TABLE,
+      _remindersTable,
       where: 'plantId=?',
       whereArgs: [plantId],
       orderBy: 'id DESC',
@@ -371,7 +371,7 @@ class DatabaseHelper {
     Database db = await database;
     final int newNextDueMillis = newNextDue.millisecondsSinceEpoch;
     await db.update(
-      _REMINDERS_TABLE,
+      _remindersTable,
       {'nextDue': newNextDueMillis},
       where: 'id = ?',
       whereArgs: [reminder.id!],
