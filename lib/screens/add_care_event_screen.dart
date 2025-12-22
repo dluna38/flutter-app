@@ -6,8 +6,9 @@ import 'package:myapp/data/plant.dart';
 
 class AddCareEventScreen extends StatefulWidget {
   final Plant plant;
+  final CareEvent? careEvent;
 
-  const AddCareEventScreen({super.key, required this.plant});
+  const AddCareEventScreen({super.key, required this.plant, this.careEvent});
 
   @override
   State<AddCareEventScreen> createState() => _AddCareEventScreenState();
@@ -27,6 +28,12 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
   void initState() {
     super.initState();
     plant = widget.plant;
+    if (widget.careEvent != null) {
+      _selectedDate = widget.careEvent!.date;
+      _selectedTime = TimeOfDay.fromDateTime(widget.careEvent!.date);
+      selectedTypeEvent = widget.careEvent!.type;
+      _notesController.text = widget.careEvent!.notes ?? '';
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -108,35 +115,24 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
               ],
             ),
             const Text('Tipo'),
-            SegmentedButton<TypeCareEvent>(
-              segments: const <ButtonSegment<TypeCareEvent>>[
-                ButtonSegment<TypeCareEvent>(
-                  value: TypeCareEvent.riego,
-                  label: Text('Riego'),
-                  icon: Icon(Icons.water_drop),
-                ),
-                ButtonSegment<TypeCareEvent>(
-                  value: TypeCareEvent.fertilizante,
-                  label: Text('Fertilizante'),
-                  icon: Icon(Icons.grain),
-                ),
-                ButtonSegment<TypeCareEvent>(
-                  value: TypeCareEvent.poda,
-                  label: Text('Poda'),
-                  icon: Icon(Icons.cut),
-                ),
-                ButtonSegment<TypeCareEvent>(
-                  value: TypeCareEvent.cambioAbono,
-                  label: Text('C. tierra'),
-                  icon: Icon(Icons.compost),
-                ),
-              ],
-              selected: <TypeCareEvent>{selectedTypeEvent},
-              onSelectionChanged: (Set<TypeCareEvent> newSelection) {
-                setState(() {
-                  selectedTypeEvent = newSelection.first;
-                });
-              },
+            Wrap(
+              spacing: 8.0,
+              children:
+                  TypeCareEvent.values.map((TypeCareEvent type) {
+                    return ChoiceChip(
+                      label: Text(type.normalName),
+                      avatar: Icon(type.icon, size: 18),
+                      selected: selectedTypeEvent == type,
+                      showCheckmark: false,
+                      onSelected: (bool selected) {
+                        if (selected) {
+                          setState(() {
+                            selectedTypeEvent = type;
+                          });
+                        }
+                      },
+                    );
+                  }).toList(),
             ),
             TextField(
               controller: _notesController,
@@ -149,26 +145,43 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  final newCareEvent = CareEvent(
-                    date: DateTime(
-                      _selectedDate.year,
-                      _selectedDate.month,
-                      _selectedDate.day,
-                      _selectedTime.hour,
-                      _selectedTime.minute,
-                    ),
-                    type: selectedTypeEvent,
-                    notes:
+                  final eventDate = DateTime(
+                    _selectedDate.year,
+                    _selectedDate.month,
+                    _selectedDate.day,
+                    _selectedTime.hour,
+                    _selectedTime.minute,
+                  );
+
+                  if (widget.careEvent != null) {
+                    // Update existing
+                    widget.careEvent!.date = eventDate;
+                    widget.careEvent!.type = selectedTypeEvent;
+                    widget.careEvent!.notes =
                         _notesController.text.isEmpty
                             ? null
-                            : _notesController.text,
-                    plant: plant,
-                  );
-                  debugPrint('new event $newCareEvent');
-                  await DatabaseHelper().insertCareEvent(
-                    newCareEvent,
-                    widget.plant.id!,
-                  );
+                            : _notesController.text;
+                    widget.careEvent!.plant ??=
+                        plant; // Ensure plant is set if missing
+
+                    await DatabaseHelper().updateCareEvent(widget.careEvent!);
+                  } else {
+                    // Create new
+                    final newCareEvent = CareEvent(
+                      date: eventDate,
+                      type: selectedTypeEvent,
+                      notes:
+                          _notesController.text.isEmpty
+                              ? null
+                              : _notesController.text,
+                      plant: plant,
+                    );
+                    await DatabaseHelper().insertCareEvent(
+                      newCareEvent,
+                      widget.plant.id!,
+                    );
+                  }
+
                   if (context.mounted) {
                     Navigator.pop(context, true);
                   }
@@ -180,9 +193,11 @@ class _AddCareEventScreenState extends State<AddCareEventScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Guardar evento',
-                  style: TextStyle(
+                child: Text(
+                  widget.careEvent != null
+                      ? 'Actualizar evento'
+                      : 'Guardar evento',
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,

@@ -10,15 +10,15 @@ class CareEvent {
 
   CareEvent({required this.date, required this.type, this.notes, this.plant});
 
-  Map<String, Object?> toMap({bool withId=false}) {
-    Map<String, Object?> map ={
+  Map<String, Object?> toMap({bool withId = false}) {
+    Map<String, Object?> map = {
       'plantId': plant?.id,
       'date': date.millisecondsSinceEpoch,
       'type': type.index,
       'notes': notes,
     };
-    if(withId){
-      map['id']=id;
+    if (withId) {
+      map['id'] = id;
     }
     return map;
   }
@@ -34,12 +34,8 @@ class CareEvent {
     return careEvent;
   }
 
-  static CareEvent createNow(Plant plant,TypeCareEvent typeCareEvent){
-    return CareEvent(
-        date: DateTime.now(),
-        type: typeCareEvent,
-        plant: plant
-    );
+  static CareEvent createNow(Plant plant, TypeCareEvent typeCareEvent) {
+    return CareEvent(date: DateTime.now(), type: typeCareEvent, plant: plant);
   }
 
   @override
@@ -49,10 +45,11 @@ class CareEvent {
 }
 
 enum TypeCareEvent {
-  riego(normalName: 'Riego',icon: Icons.water_drop),
-  fertilizante(normalName: 'Fertilizante',icon: Icons.grain),
-  poda(normalName: 'Poda',icon: Icons.cut),
-  cambioAbono(normalName: 'Cambio abono',icon: Icons.compost);
+  riego(normalName: 'Riego', icon: Icons.water_drop),
+  fertilizante(normalName: 'Fertilizante', icon: Icons.grain),
+  poda(normalName: 'Poda', icon: Icons.cut),
+  cambioAbono(normalName: 'Cambio abono', icon: Icons.compost),
+  otro(normalName: 'Otro', icon: Icons.stars);
 
   final String normalName;
   final IconData icon;

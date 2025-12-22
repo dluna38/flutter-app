@@ -31,7 +31,35 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'plants_database.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+      onConfigure: _onConfigure,
+    );
+  }
+
+  Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add indexes for existing users
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_care_events_plantId ON care_events(plantId)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_care_events_type ON care_events(type)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_care_events_date ON care_events(date)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_reminders_plantId ON reminders(plantId)',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -52,7 +80,8 @@ class DatabaseHelper {
           plantId INTEGER,
           date INTEGER,
           type INTEGER,
-          notes TEXT
+          notes TEXT,
+          FOREIGN KEY (plantId) REFERENCES plants (id) ON DELETE CASCADE
       )
     ''');
     await db.execute('''
@@ -62,9 +91,20 @@ class DatabaseHelper {
           task TEXT,
           frequency INTEGER,
           nextDue INTEGER,
-          active INTEGER
+          active INTEGER,
+          FOREIGN KEY (plantId) REFERENCES plants (id) ON DELETE CASCADE
       )
     ''');
+    // CREATE INDEXES
+    await db.execute(
+      'CREATE INDEX idx_care_events_plantId ON care_events(plantId)',
+    );
+    await db.execute('CREATE INDEX idx_care_events_type ON care_events(type)');
+    await db.execute('CREATE INDEX idx_care_events_date ON care_events(date)');
+    await db.execute(
+      'CREATE INDEX idx_reminders_plantId ON reminders(plantId)',
+    );
+
     await db.execute('''
       CREATE TABLE logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -197,6 +237,21 @@ class DatabaseHelper {
     }
   }
 
+  Future<int> updateCareEvent(CareEvent careEvent) async {
+    try {
+      Database db = await database;
+      return await db.update(
+        'care_events',
+        careEvent.toMap(),
+        where: 'id = ?',
+        whereArgs: [careEvent.id],
+      );
+    } catch (e) {
+      log.severe("Error updating care event: $e");
+      return -1;
+    }
+  }
+
   deleteCareEvent(int id) {}
 
   Future<List<CareEvent>> getCareEvents(
@@ -237,6 +292,12 @@ class DatabaseHelper {
         whereClauses.add('date <= ?');
         whereArgs.add(endDate);
       }
+    }
+
+    // Filtro por texto en notas (Búsqueda)
+    if (filters.containsKey('search') && filters['search']!.isNotEmpty) {
+      whereClauses.add('notes LIKE ?');
+      whereArgs.add('%${filters['search']}%');
     }
 
     final String whereString = whereClauses.join(' AND ');

@@ -30,6 +30,11 @@ class _CareEventsScreenState extends State<CareEventsScreen> {
 
   // Método para obtener los eventos de la base de datos con filtros
   void _fetchCareEvents() {
+    if (_searchQuery.isNotEmpty) {
+      _filters['search'] = _searchQuery;
+    } else {
+      _filters.remove('search');
+    }
     setState(() {
       _careEventsFuture = DatabaseHelper().getCareEvents(
         widget.plant.id!,
@@ -105,10 +110,21 @@ class _CareEventsScreenState extends State<CareEventsScreen> {
                   }
 
                   final events = snapshot.data!;
+
+                  if (events.isEmpty) {
+                    return const Center(
+                      child: Text('No se encontraron eventos.'),
+                    );
+                  }
+
                   return ListView.builder(
                     itemCount: events.length,
                     itemBuilder: (context, index) {
-                      return ScheduleTile(event: events[index]);
+                      return ScheduleTile(
+                        event: events[index],
+                        plant: widget.plant,
+                        onRefresh: _fetchCareEvents,
+                      );
                     },
                   );
                 },
@@ -120,12 +136,50 @@ class _CareEventsScreenState extends State<CareEventsScreen> {
     );
   }
 
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // ... (existing methods)
+
   Widget _buildFilterControls(ColorScheme colorScheme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              labelText: 'Buscar en notas',
+              prefixIcon: const Icon(Icons.search),
+              border: const OutlineInputBorder(),
+              suffixIcon:
+                  _searchQuery.isNotEmpty
+                      ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                      : null,
+            ),
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value.toLowerCase();
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+          // ... (existing filters)
           // Filtro por tipo de evento (Dropdown)
           Row(
             children: [

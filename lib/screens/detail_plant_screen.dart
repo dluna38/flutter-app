@@ -107,10 +107,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 
   void updateCareEventsDataset() {
-    _careEventsFuture = DatabaseHelper().getCareEvents(
-      plant.id!,
-      filters: {"limit": "5"},
-    );
+    setState(() {
+      _careEventsFuture = DatabaseHelper().getCareEvents(
+        plant.id!,
+        filters: {"limit": "5"},
+      );
+    });
   }
 
   void _removeReminder(int index) {
@@ -399,7 +401,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                     plant = freshPlant;
                   });
                 }
-                if (context.mounted) {
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('¡Planta actualizada con éxito!'),
@@ -456,9 +458,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             );
             //se actualiza sin importar que el usuario cancele el agregado
             if (result == null || result) {
-              setState(() {
-                updateCareEventsDataset();
-              });
+              updateCareEventsDataset();
             }
           },
           icon: Icon(Icons.add, color: colorScheme.primary, size: 20),
@@ -520,7 +520,11 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               physics:
                   const NeverScrollableScrollPhysics(), // Para evitar scroll anidado
               itemBuilder: (context, index) {
-                return ScheduleTile(event: events[index]);
+                return ScheduleTile(
+                  event: events[index],
+                  plant: plant,
+                  onRefresh: updateCareEventsDataset,
+                );
               },
             ),
             if (events.length == 5)
@@ -674,57 +678,115 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
 class ScheduleTile extends StatelessWidget {
   final CareEvent event;
+  final Plant plant;
+  final VoidCallback? onRefresh;
 
-  const ScheduleTile({super.key, required this.event});
+  const ScheduleTile({
+    super.key,
+    required this.event,
+    required this.plant,
+    this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-      leading: Icon(
-        _getEventTypeIcon(event.type),
-        color: colorScheme.primary,
-      ), // Opcional: un icono
-      title: Text(
-        'Evento: ${event.type.normalName}',
-        style: TextStyle(
-          color: colorScheme.onSurface,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
+    return InkWell(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Text('Evento: ${event.type.normalName}'),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Fecha: ${StringHelpers.formatLocalDate(event.date, context)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      if (event.notes != null) ...[
+                        const Text(
+                          'Notas:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(event.notes!),
+                      ],
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      bool? result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => AddCareEventScreen(
+                                plant: plant,
+                                careEvent: event,
+                              ),
+                        ),
+                      );
+                      if (result == true && onRefresh != null) {
+                        onRefresh!();
+                      }
+                    },
+                    child: const Text('Editar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cerrar'),
+                  ),
+                ],
+              ),
+        );
+      },
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+        leading: Icon(event.type.icon, color: colorScheme.primary),
+        title: Text(
+          'Evento: ${event.type.normalName}',
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              StringHelpers.formatLocalDate(event.date, context),
+              style: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (event.notes != null && event.notes!.isNotEmpty)
+              Text(
+                event.notes!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+          ],
         ),
       ),
-      subtitle: Text(
-        StringHelpers.formatLocalDate(event.date, context),
-        style: TextStyle(
-          color: colorScheme.onSurface.withValues(alpha: 0.7),
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      /*trailing: Icon(
-        Icons.chevron_right,
-        color: colorScheme.onSurface.withValues(alpha: 0.5),
-      ),*/
     );
   }
-
-  IconData _getEventTypeIcon(TypeCareEvent type) {
-    switch (type) {
-      case TypeCareEvent.riego:
-        return Icons.water_drop_outlined;
-      case TypeCareEvent.fertilizante:
-        return Icons.compost;
-      case TypeCareEvent.poda:
-        return Icons.content_cut;
-      case TypeCareEvent.cambioAbono:
-        return Icons.compost;
-    }
-  }
 }
-// --- WIDGETS REUTILIZABLES ---
 
 class _InfoRow extends StatelessWidget {
   final String label;
