@@ -142,9 +142,9 @@ void callbackDispatcher() {
         try {
           List<Reminder> list =
               await DatabaseHelper().getActiveAndPastDueReminders();
-          DatabaseHelper().insertLog(
+          /*DatabaseHelper().insertLog(
             'Numbers of Reminders activeAndPast: ${list.length}',
-          );
+          );*/
 
           for (var reminder in list) {
             reminder.setNewNextDue();

@@ -103,7 +103,11 @@ class _PlantListScreenState extends State<PlantListScreen> {
           fit: StackFit.expand,
           children: [
             plant.imagePath != null
-                ? Image.file(File(plant.imagePath!), fit: BoxFit.cover)
+                ? Image.file(
+                  File(plant.imagePath!),
+                  fit: BoxFit.cover,
+                  cacheWidth: 400,
+                )
                 : Image.asset(
                   IOHelpers.getImagePlaceHolderString(),
                   fit: BoxFit.cover,

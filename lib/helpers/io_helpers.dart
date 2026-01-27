@@ -10,7 +10,10 @@ class IOHelpers {
 
   static CircleAvatar getAvatar(String? path) {
     return path != null
-        ? CircleAvatar(backgroundImage: FileImage(File(path)), radius: 30)
+        ? CircleAvatar(
+          backgroundImage: ResizeImage(FileImage(File(path)), width: 150),
+          radius: 30,
+        )
         : CircleAvatar(backgroundImage: getImagePlaceHolder(), radius: 30);
   }
 
